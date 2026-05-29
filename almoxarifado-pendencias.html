@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Pendências</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
+
+body{
+    margin:0;
+    font-family:'Orbitron', Arial, sans-serif;
+    background:#f5f7fb;
+    color:#111;
+}
+
+/* HEADER */
+.header{
+    background:#fff;
+    padding:20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:2px solid #ff7a00;
+}
+
+.header h1{
+    margin:0;
+    color:#111;
+}
+
+.btn{
+    background:#ff7a00;
+    color:#fff;
+    border:none;
+    padding:10px 14px;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.btn:hover{
+    background:#ff8f2f;
+}
+
+/* KPIs */
+.kpis{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
+    padding:20px;
+}
+
+.kpi{
+    background:#fff;
+    border:1px solid rgba(0,0,0,0.08);
+    border-radius:12px;
+    padding:18px;
+    box-shadow:0 3px 10px rgba(0,0,0,0.05);
+}
+
+.kpi h3{
+    margin:0;
+    font-size:14px;
+    color:#111;
+}
+
+.kpi p{
+    font-size:28px;
+    margin:10px 0 0;
+    color:#ff7a00;
+    font-weight:bold;
+}
+
+/* FILTER */
+.filter{
+    padding:0 20px 20px;
+}
+
+input{
+    padding:10px;
+    width:100%;
+    max-width:300px;
+    border:1px solid #ddd;
+    border-radius:8px;
+    font-family:'Orbitron', sans-serif;
+}
+
+/* TABLE */
+.table{
+    padding:20px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:#fff;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+th{
+    background:#111;
+    color:#fff;
+    padding:12px;
+    text-align:left;
+}
+
+td{
+    padding:12px;
+    border-bottom:1px solid #eee;
+}
+
+.status-aguardando{
+    color:#ff7a00;
+    font-weight:bold;
+}
+
+.status-tratada{
+    color:#2ecc71;
+    font-weight:bold;
+}
+
+.back{
+    padding: 15px 20px;
+}
+
+.back button{
+    background: transparent;
+    border: 1px solid #ff7a00;
+    color: #ff7a00;
+    padding: 10px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family:'Orbitron', sans-serif;
+    transition: 0.2s;
+}
+
+.back button:hover{
+    background:#ff7a00;
+    color:#fff;
+    box-shadow:0 0 10px rgba(255,122,0,0.4);
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+    <h1>CONTROLE DE PENDÊNCIAS</h1>
+    <button class="btn" onclick="load()">Atualizar</button>
+</div>
+
+<div class="back">
+    <button onclick="voltar()">← VOLTAR</button>
+</div>
+
+<!-- KPIs -->
+<div class="kpis">
+
+    <div class="kpi">
+        <h3>Total Pendências</h3>
+        <p id="total">0</p>
+    </div>
+
+    <div class="kpi">
+        <h3>Aguardando</h3>
+        <p id="aguardando">0</p>
+    </div>
+
+    <div class="kpi">
+        <h3>Tratadas</h3>
+        <p id="tratadas">0</p>
+    </div>
+
+</div>
+
+<!-- FILTER -->
+<div class="filter">
+    <input id="search" onkeyup="filter()" placeholder="Buscar pendência...">
+</div>
+
+<!-- TABLE -->
+<div class="table">
+<table>
+<thead>
+<tr>
+    <th>Título</th>
+    <th>Responsável</th>
+    <th>Prioridade</th>
+    <th>Status</th>
+</tr>
+</thead>
+
+<tbody id="tbody"></tbody>
+</table>
+</div>
+
+<script>
+
+const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec";
+
+let dados = [];
+
+/* normalizador */
+function get(obj, key){
+    return (obj[key] || obj[key.toLowerCase()] || "").toString();
+}
+
+/* status normalizado */
+function norm(v){
+    return (v || "").toString().trim().toUpperCase();
+}
+
+async function load(){
+
+    const res = await fetch(API_URL + "?v=" + Date.now());
+    const data = await res.json();
+
+    const pend = data.pendencias || [];
+    dados = pend;
+
+    // KPIs
+    document.getElementById("total").innerText = pend.length;
+
+    const aguardando = pend.filter(i =>
+        norm(i.status) === "AGUARDANDO"
+        || norm(i.status) === "AGUARDANDO SALDO"
+    ).length;
+
+    const tratadas = pend.filter(i =>
+        norm(i.status).includes("TRATADA")
+    ).length;
+
+    document.getElementById("aguardando").innerText = aguardando;
+    document.getElementById("tratadas").innerText = tratadas;
+
+    render(pend);
+}
+
+function render(lista){
+
+    const tbody = document.getElementById("tbody");
+    tbody.innerHTML = "";
+
+    lista.forEach(i=>{
+
+        const material = get(i,"material");
+        const operadora = get(i,"operadora");
+        const cluster = get(i,"cluster");
+        const status = get(i,"status");
+
+        tbody.innerHTML += `
+        <tr>
+            <td>${material}</td>
+            <td>${operadora}</td>
+            <td>${cluster}</td>
+            <td class="${
+                norm(status).includes("TRATADA")
+                ? "status-tratada"
+                : "status-aguardando"
+            }">
+                ${status}
+            </td>
+        </tr>`;
+    });
+}
+
+function filter(){
+
+    const v = document.getElementById("search").value.toLowerCase();
+
+    const filtrado = dados.filter(i =>
+        get(i,"material").toLowerCase().includes(v) ||
+        get(i,"operadora").toLowerCase().includes(v) ||
+        get(i,"cluster").toLowerCase().includes(v) ||
+        get(i,"codigo").toLowerCase().includes(v)
+    );
+
+    render(filtrado);
+}
+
+load();
+
+function voltar(){
+    window.location.href = "index.html";
+}
+
+</script>
+
+</body>
+</html>

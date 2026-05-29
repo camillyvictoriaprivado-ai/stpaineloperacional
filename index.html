@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Cyber</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
+
+body {
+    margin: 0;
+    font-family: 'Orbitron', sans-serif;
+    background: #f5f7fb; /* branco moderno */
+    color: #111;
+}
+
+/* GRID SUTIL TECH */
+body::before {
+    content: "";
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    background:
+        linear-gradient(90deg, transparent 97%, rgba(255,122,0,0.05) 100%),
+        linear-gradient(0deg, transparent 97%, rgba(0,0,0,0.03) 100%);
+    background-size: 50px 50px;
+    pointer-events: none;
+}
+
+/* HEADER */
+.header {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    border-bottom: 2px solid #ff7a00;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.header h1 {
+    color: #111; /* preto topo */
+    letter-spacing: 2px;
+    font-weight: 700;
+}
+
+.btn {
+    background: #ff7a00;
+    border: none;
+    color: #fff;
+    padding: 10px 14px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: 0.2s;
+    font-weight: bold;
+}
+
+.btn:hover {
+    background: #ff8f2f;
+    box-shadow: 0 0 10px rgba(255,122,0,0.4);
+}
+
+/* STATUS */
+.status {
+    display: flex;
+    gap: 15px;
+    margin: 20px;
+}
+
+.box {
+    flex: 1;
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.08);
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+    transition: 0.2s;
+}
+
+.box:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+}
+
+/* 🔥 número em destaque */
+.box span {
+    font-size: 28px;
+    font-weight: bold;
+    color: #ff7a00;
+}
+
+/* PROGRESS */
+.progress {
+    height: 10px;
+    background: #eaeaea;
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 0 20px;
+}
+
+.bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #ff7a00, #111);
+    transition: 0.5s;
+}
+
+/* percentual */
+#percent {
+    margin: 10px 20px;
+    color: #111;
+    font-weight: bold;
+}
+
+/* GRID */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    padding: 20px;
+}
+
+/* CARD */
+.card {
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.08);
+    padding: 20px;
+    border-radius: 12px;
+    transition: 0.25s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+/* glow leve cyber */
+.card::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,122,0,0.08), transparent 60%);
+    transform: rotate(20deg);
+}
+
+.card:hover {
+    transform: scale(1.03);
+    border-color: #ff7a00;
+    box-shadow: 0 10px 20px rgba(255,122,0,0.15);
+}
+
+/* 🖤 topo preto */
+.card h3 {
+    color: #111;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* 🧡 texto inferior laranja */
+.card p {
+    color: #ff7a00;
+    font-weight: 600;
+    margin: 8px 0 0;
+}
+
+/* botão foco */
+.btn:active {
+    transform: scale(0.98);
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+    <h1>PAINEL OPERACIONAL ST</h1>
+    <button class="btn" onclick="carregar()">ATUALIZAR</button>
+</div>
+
+<div class="container">
+
+    <div class="status">
+
+        <div class="box">
+            Aguardando Fechamento<br>
+            <span id="aguardandoFechamento">0</span>
+        </div>
+
+        <div class="box">
+            Supervisor Cidade<br>
+            <span id="supervisorCidade">0</span>
+        </div>
+
+        <div class="box">
+            Meta do dia<br>
+            <span>0%</span>
+        </div>
+
+    </div>
+
+    <div class="progress">
+        <div id="bar" class="bar"></div>
+    </div>
+
+    <p id="percent">0%</p>
+
+    <div class="grid">
+
+        <div class="card" onclick="go('dashboard.html')">
+            <h3>Dashboard</h3>
+            <p>Acompanhamento diário</p>
+        </div>
+
+        <div class="card" onclick="go('')">
+            <h3>Dashboard</h3>
+            <p>Gráficos gerencias</p>
+        </div>
+
+        <div class="card" onclick="go('almoxarifado-pendencias.html')">
+            <h3>Almoxarifado</h3>
+            <p>Controle de pendências</p>
+        </div>
+
+        <div class="card" onclick="go('almoxarifado-estoque.html')">
+            <h3>Almoxarifado</h3>
+            <p>Controle de estoque</p>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec";
+
+function go(page) {
+    window.location.href = page;
+}
+
+async function carregar() {
+
+    const res = await fetch(API_URL + "?v=" + Date.now());
+    const data = await res.json();
+
+    const base = data.base || [];
+
+    // ===== FILTRO POR STATUS =====
+    const aguardandoFechamento =
+        base.filter(i => i.status === "AGUARDANDO FECHAMENTO").length;
+
+    const supervisorCidade =
+        base.filter(i => i.status === "SUPERVISOR CIDADE").length;
+
+    const concluido =
+        base.filter(i => i.status === "CONCLUIDO").length;
+
+    const cancelado =
+        base.filter(i => i.status === "CANCELADO").length;
+
+    const eps =
+        base.filter(i => i.status === "EPS").length;
+
+    // ===== ATUALIZA UI =====
+    document.getElementById("aguardandoFechamento").innerText = aguardandoFechamento;
+    document.getElementById("supervisorCidade").innerText = supervisorCidade;
+
+    // ===== PROGRESSO =====
+    const total = base.length;
+    const percent = total ? Math.round((concluido / total) * 100) : 0;
+
+    document.getElementById("percent").innerText = percent + "%";
+    document.getElementById("bar").style.width = percent + "%";
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dashboard Diário</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
+
+body{
+    margin:0;
+    font-family:'Orbitron', Arial, sans-serif;
+    background:#f5f7fb;
+    color:#111;
+}
+
+.header{
+    background:#fff;
+    padding:20px;
+    display:flex;
+    justify-content:space-between;
+    border-bottom:2px solid #ff7a00;
+}
+
+.header h1{ margin:0; }
+
+.header span{
+    color:#ff7a00;
+    font-weight:bold;
+}
+
+.back{
+    padding:15px 20px;
+}
+
+.back button{
+    background:#fff;
+    border:1px solid #ff7a00;
+    color:#ff7a00;
+    padding:10px 14px;
+    cursor:pointer;
+}
+
+.back button:hover{
+    background:#ff7a00;
+    color:#fff;
+}
+
+/* KPIS */
+.kpis{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:15px;
+    padding:20px;
+}
+
+.kpi{
+    background:#fff;
+    border:1px solid #eee;
+    border-radius:12px;
+    padding:18px;
+}
+
+.kpi h3{ margin:0; font-size:13px; }
+
+.kpi p{
+    font-size:24px;
+    margin:10px 0 0;
+    color:#ff7a00;
+    font-weight:bold;
+}
+
+/* GRÁFICOS */
+.middle{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:15px;
+    padding:20px;
+}
+
+.panel{
+    background:#fff;
+    border:1px solid #eee;
+    border-radius:12px;
+    padding:15px;
+}
+
+.circle{
+    width:140px;
+    height:140px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin:auto;
+    font-size:26px;
+    background:conic-gradient(#ff7a00 0%, #eee 0%);
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+    <h1>Dashboard operacional</h1>
+    <span>SISTEMA ONLINE</span>
+</div>
+
+<div class="back">
+    <button onclick="window.location.href='index.html'">← VOLTAR</button>
+</div>
+
+<!-- KPIS -->
+<div class="kpis">
+
+    <div class="kpi">
+        <h3>Aguardando Fechamento</h3>
+        <p id="aguardando">0</p>
+    </div>
+
+    <div class="kpi">
+        <h3>Cancelado</h3>
+        <p id="cancelado">0</p>
+    </div>
+
+    <div class="kpi">
+        <h3>Concluído</h3>
+        <p id="concluido">0</p>
+    </div>
+
+    <div class="kpi">
+        <h3>EPS / Baixa Incorreta</h3>
+        <p id="eps">0</p>
+    </div>
+
+    <div class="kpi">
+        <h3>Supervisor Cidade</h3>
+        <p id="supervisor">0</p>
+    </div>
+
+    <div class="kpi">
+        <h3>Responsável Fibra</h3>
+        <p id="fibra">-</p>
+    </div>
+
+</div>
+
+<!-- GRÁFICOS -->
+<div class="middle">
+
+    <div class="panel">
+        <h3>Status Geral</h3>
+        <canvas id="barChart"></canvas>
+    </div>
+
+    <div class="panel">
+        <h3>Distribuição</h3>
+        <canvas id="pieChart"></canvas>
+    </div>
+
+    <div class="panel">
+        <h3>Por Cluster</h3>
+        <canvas id="clusterChart"></canvas>
+    </div>
+
+    <div class="panel">
+        <h3>Por Operadora (Responsável Fibra)</h3>
+        <canvas id="operadoraChart"></canvas>
+    </div>
+
+    <div class="panel">
+        <h3>Produtividade</h3>
+        <div class="circle" id="circle">0%</div>
+    </div>
+
+</div>
+
+<script>
+
+const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec";
+
+let barChart, pieChart, clusterChart, operadoraChart;
+
+/* remove duplicados */
+function uniqueById(arr, key = "id") {
+    const seen = new Set();
+    return arr.filter(item => {
+        const id = item[key];
+        if (!id || seen.has(id)) return false;
+        seen.add(id);
+        return true;
+    });
+}
+
+/* status normalizado */
+function getStatus(v){
+    return (v || "").toString().trim().toUpperCase();
+}
+
+/* safe get */
+function get(obj, key){
+    return (obj[key] || "").toString();
+}
+
+async function load(){
+
+    const res = await fetch(API_URL);
+    const data = await res.json();
+
+    const base = uniqueById(data.base || [], "id");
+
+    // ===== STATUS =====
+    const aguardando = base.filter(i =>
+        getStatus(i.status) === "AGUARDANDO FECHAMENTO"
+    ).length;
+
+    const cancelado = base.filter(i =>
+        getStatus(i.status) === "CANCELADO"
+    ).length;
+
+    const concluido = base.filter(i =>
+        getStatus(i.status) === "CONCLUIDO"
+    ).length;
+
+    const eps = base.filter(i =>
+        getStatus(i.status) === "EPS/BAIXA DE MATERIAL INCORRETA"
+    ).length;
+
+    const supervisor = base.filter(i =>
+        getStatus(i.status) === "SUPERVISOR CIDADE"
+    ).length;
+
+    // ===== RESPONSÁVEL FIBRA (mais frequente) =====
+    const fibraLista = base
+        .map(i => get(i,"responsavel fibra").trim())
+        .filter(v => v);
+
+    const freqFibra = {};
+    fibraLista.forEach(n=>{
+        freqFibra[n] = (freqFibra[n] || 0) + 1;
+    });
+
+    const fibraNome =
+        Object.entries(freqFibra)
+            .sort((a,b)=>b[1]-a[1])[0]?.[0] || "-";
+
+    // ===== CLUSTER =====
+    const clusterMap = {};
+    base.forEach(i=>{
+        const c = get(i,"cluster") || "SEM CLUSTER";
+        clusterMap[c] = (clusterMap[c] || 0) + 1;
+    });
+
+    // ===== OPERADORA (responsável fibra) =====
+    const operadoraMap = {};
+    base.forEach(i=>{
+        const o = get(i,"responsavel fibra") || "SEM RESPONSAVEL";
+        operadoraMap[o] = (operadoraMap[o] || 0) + 1;
+    });
+
+    // ===== UI =====
+    document.getElementById("aguardando").innerText = aguardando;
+    document.getElementById("cancelado").innerText = cancelado;
+    document.getElementById("concluido").innerText = concluido;
+    document.getElementById("eps").innerText = eps;
+    document.getElementById("supervisor").innerText = supervisor;
+    document.getElementById("fibra").innerText = fibraNome;
+
+    // ===== PRODUTIVIDADE =====
+    const total = base.length;
+    const perc = total ? Math.round((concluido / total) * 100) : 0;
+
+    document.getElementById("circle").innerText = perc + "%";
+    document.getElementById("circle").style.background =
+        `conic-gradient(#ff7a00 ${perc}%, #eee ${perc}%)`;
+
+    // ===== BAR =====
+    if(barChart) barChart.destroy();
+
+    barChart = new Chart(document.getElementById("barChart"),{
+        type:"bar",
+        data:{
+            labels:["Aguardando","Cancelado","Concluído","EPS","Supervisor"],
+            datasets:[{
+                data:[aguardando,cancelado,concluido,eps,supervisor],
+                backgroundColor:["#ff7a00","#111","#00aa55","#ff0055","#5555ff"]
+            }]
+        },
+        options:{ plugins:{ legend:{ display:false } } }
+    });
+
+    // ===== PIE =====
+    if(pieChart) pieChart.destroy();
+
+    pieChart = new Chart(document.getElementById("pieChart"),{
+        type:"doughnut",
+        data:{
+            labels:["Concluído","Restante"],
+            datasets:[{
+                data:[concluido, total - concluido],
+                backgroundColor:["#ff7a00","#eee"]
+            }]
+        }
+    });
+
+    // ===== CLUSTER =====
+    if(clusterChart) clusterChart.destroy();
+
+    clusterChart = new Chart(document.getElementById("clusterChart"),{
+        type:"bar",
+        data:{
+            labels:Object.keys(clusterMap),
+            datasets:[{
+                data:Object.values(clusterMap),
+                backgroundColor:"#ff7a00"
+            }]
+        },
+        options:{ plugins:{ legend:{ display:false } } }
+    });
+
+    // ===== OPERADORA =====
+    if(operadoraChart) operadoraChart.destroy();
+
+    operadoraChart = new Chart(document.getElementById("operadoraChart"),{
+        type:"bar",
+        data:{
+            labels:Object.keys(operadoraMap),
+            datasets:[{
+                data:Object.values(operadoraMap),
+                backgroundColor:"#111"
+            }]
+        },
+        options:{ plugins:{ legend:{ display:false } } }
+    });
+
+}
+
+load();
+setInterval(load, 30000);
+
+</script>
+
+</body>
+</html>
