@@ -169,6 +169,32 @@ body::before {
 .btn:active {
     transform: scale(0.98);
 }
+
+.section-title {
+    margin: 30px 20px 15px;
+    padding: 12px 18px;
+
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+
+    color: #111;
+
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    border-left: 4px solid #ff7a00;
+    background: linear-gradient(90deg, rgba(255,122,0,0.08), transparent);
+
+    border-radius: 8px;
+
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+
+    font-family: 'Orbitron', sans-serif;
+}
+
 </style>
 
 </head>
@@ -190,8 +216,8 @@ body::before {
         </div>
 
         <div class="box">
-            Supervisor Cidade<br>
-            <span id="supervisorCidade">0</span>
+            Eps/Baixa de Material Incorreta<br>
+            <span id="eps">0</span>
         </div>
 
         <div class="box">
@@ -206,6 +232,8 @@ body::before {
     </div>
 
     <p id="percent">0%</p>
+
+    <h2 class="section-title">Manutenção Emergencial</h2>
 
     <div class="grid">
 
@@ -231,6 +259,8 @@ body::before {
 
     </div>
 
+    <h2 class="section-title">Implantação</h2>
+
 </div>
 
 <script>
@@ -239,10 +269,15 @@ if(localStorage.getItem("logado") !== "true"){
     window.location.href = "login.html";
 }
 
-const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug-68A5Uyv8hzzbJHtxh0t-Ig/exec";
 
 function go(page) {
     window.location.href = page;
+}
+
+// 🔥 ADICIONA ISSO (CORREÇÃO PRINCIPAL)
+function norm(v){
+    return (v || "").toString().trim().toUpperCase();
 }
 
 async function carregar() {
@@ -252,33 +287,33 @@ async function carregar() {
 
     const base = data.base || [];
 
-    // ===== FILTRO POR STATUS =====
     const aguardandoFechamento =
-        base.filter(i => i.status === "AGUARDANDO FECHAMENTO").length;
+    base.filter(i => (i.status || "").trim() === "Aguardando Fechamento").length;
 
-    const supervisorCidade =
-        base.filter(i => i.status === "SUPERVISOR CIDADE").length;
+const supervisorCidade =
+    base.filter(i => (i.status || "").trim() === "Supervisor Cidade").length;
 
-    const concluido =
-        base.filter(i => i.status === "CONCLUIDO").length;
+const concluido =
+    base.filter(i => (i.status || "").trim() === "Concluido").length;
 
-    const cancelado =
-        base.filter(i => i.status === "CANCELADO").length;
+const cancelado =
+    base.filter(i => (i.status || "").trim() === "Cancelado").length;
 
-    const eps =
-        base.filter(i => i.status === "EPS").length;
+const eps =
+    base.filter(i => (i.status || "").trim() === "EPS").length;
 
-    // ===== ATUALIZA UI =====
     document.getElementById("aguardandoFechamento").innerText = aguardandoFechamento;
     document.getElementById("supervisorCidade").innerText = supervisorCidade;
 
-    // ===== PROGRESSO =====
     const total = base.length;
     const percent = total ? Math.round((concluido / total) * 100) : 0;
 
     document.getElementById("percent").innerText = percent + "%";
     document.getElementById("bar").style.width = percent + "%";
 }
+
+/* 🔥 ISSO AQUI É O QUE FALTAVA */
+carregar();
 
 </script>
 
