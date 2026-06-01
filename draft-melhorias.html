@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Dashboard Melhorias</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
+
+body{
+    background:#f5f7fb;
+    font-family:'Orbitron',sans-serif;
+    color:#111;
+}
+
+.card-kpi,
+.chart-card{
+    background:#fff;
+    border:none;
+    border-radius:15px;
+    box-shadow:0 3px 10px rgba(0,0,0,.08);
+}
+
+.kpi-value{
+    font-size:32px;
+    font-weight:700;
+    color:#ff7a00;
+}
+
+.chart-card{
+    padding:15px;
+}
+
+.chart-container{
+    position: relative;
+    height: 320px;
+}
+
+canvas{
+    max-height: 100% !important;
+}
+
+h2, h5{
+    font-weight:700;
+}
+
+.table thead th{
+    background:#111 !important;
+    color:#fff;
+    border:none;
+}
+
+.table tbody tr:hover{
+    background:rgba(255,122,0,.08);
+}
+
+.btn-dark{
+    background:#111;
+    border:none;
+}
+
+.btn-warning{
+    background:#ffcc00;
+    border:none;
+    color:#111;
+    font-weight:600;
+}
+
+.btn-warning:hover{
+    background:#ffd633;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container-fluid p-4">
+
+<h2 class="mb-4">Dashboard Melhorias (GPON / Rede)</h2>
+
+<div class="d-flex justify-content-end gap-2 mb-3">
+    <a href="painel.html" class="btn btn-dark px-4">← Voltar</a>
+    <button class="btn btn-warning px-4" onclick="exportarExcel()">Exportar Excel</button>
+</div>
+
+<!-- KPI -->
+<div class="row g-3 mb-4">
+
+<div class="col-md-4">
+<div class="card card-kpi">
+<div class="card-body text-center">
+<div>Total</div>
+<div id="total" class="kpi-value">0</div>
+</div>
+</div>
+</div>
+
+<div class="col-md-4">
+<div class="card card-kpi">
+<div class="card-body text-center">
+<div>Executadas</div>
+<div id="executadas" class="kpi-value">0</div>
+</div>
+</div>
+</div>
+
+<div class="col-md-4">
+<div class="card card-kpi">
+<div class="card-body text-center">
+<div>Pendentes</div>
+<div id="pendentes" class="kpi-value">0</div>
+</div>
+</div>
+</div>
+
+</div>
+
+<!-- GRÁFICOS -->
+<div class="row g-4 mb-4">
+
+<div class="col-lg-6">
+<div class="card chart-card">
+<h5>Empresa</h5>
+<div class="chart-container">
+<canvas id="empresaChart"></canvas>
+</div>
+</div>
+</div>
+
+<div class="col-lg-6">
+<div class="card chart-card">
+<h5>Armário</h5>
+<div class="chart-container">
+<canvas id="armarioChart"></canvas>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="row g-4 mb-4">
+
+<div class="col-lg-6">
+<div class="card chart-card">
+<h5>Responsável</h5>
+<div class="chart-container">
+<canvas id="respChart"></canvas>
+</div>
+</div>
+</div>
+
+<div class="col-lg-6">
+<div class="card chart-card">
+<h5>Status Campo</h5>
+<div class="chart-container">
+<canvas id="statusCampoChart"></canvas>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="row g-4 mb-4">
+
+<div class="col-lg-6">
+<div class="card chart-card">
+<h5>Cluster</h5>
+<div class="chart-container">
+<canvas id="clusterChart"></canvas>
+</div>
+</div>
+</div>
+
+<div class="col-lg-6">
+<div class="card chart-card">
+<h5>Custo Total por Cluster</h5>
+<div class="chart-container">
+<canvas id="custoChart"></canvas>
+</div>
+</div>
+</div>
+
+</div>
+
+<!-- CONTROLES TABELA -->
+<div class="d-flex gap-2 mb-3">
+
+<select id="filtroCluster" class="form-select" style="max-width:250px" onchange="filtrarTabela()">
+    <option value="">Todos os clusters</option>
+</select>
+
+<button class="btn btn-dark" onclick="ordenarCusto()">Ordenar por Custo ↓</button>
+<button class="btn btn-warning" onclick="resetTabela()">Reset</button>
+
+</div>
+
+<!-- TABELA -->
+<div class="card chart-card">
+<div class="card-body">
+
+<h5 class="mb-3">Tabela</h5>
+
+<div class="table-responsive">
+
+<table class="table table-striped table-hover">
+
+<thead>
+<tr>
+<th>ID Obra</th>
+<th>Empresa</th>
+<th>Cluster</th>
+<th>Status Campo</th>
+<th>Requisição</th>
+<th>Custo Total</th>
+</tr>
+</thead>
+
+<tbody id="tbody"></tbody>
+
+</table>
+
+</div>
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+let dadosBase = [];
+let dadosGlobais = [];
+let ordemCusto = false;
+
+const API_URL =
+"https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec?type=melhorias";
+
+function agrupar(lista, campo){
+    const map = {};
+    lista.forEach(i=>{
+        const k = i[campo] || "Sem Info";
+        map[k] = (map[k] || 0) + 1;
+    });
+    return map;
+}
+
+function parseCusto(v){
+    return Number(String(v||"")
+        .replace("R$","")
+        .replace(/\./g,"")
+        .replace(",",".")
+    ) || 0;
+}
+
+async function carregar(){
+
+    const res = await fetch(API_URL + "&cache=" + Date.now());
+    const json = await res.json();
+
+    const dados = json.melhorias || [];
+
+    dadosBase = dados;
+    dadosGlobais = dados;
+
+    document.getElementById("total").innerText = dados.length;
+
+    montarCards(dados);
+    montarGraficos(dados);
+    montarTabela(dados);
+    popularFiltroCluster(dados);
+}
+
+function montarCards(dados){
+
+    let exec = 0, pend = 0;
+
+    dados.forEach(d=>{
+        const s = String(d["status campo"]||"").toUpperCase();
+        if(s.includes("EXEC")) exec++;
+        else pend++;
+    });
+
+    document.getElementById("executadas").innerText = exec;
+    document.getElementById("pendentes").innerText = pend;
+}
+
+function options(){
+    return {
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{ legend:{ display:false } },
+        scales:{ x:{ ticks:{ maxRotation:45,minRotation:45 } } }
+    };
+}
+
+function montarGraficos(dados){
+
+    const empresa = agrupar(dados,"empresa");
+    new Chart(document.getElementById("empresaChart"), {
+        type:"bar",
+        data:{ labels:Object.keys(empresa), datasets:[{ data:Object.values(empresa), backgroundColor:"#ff7a00" }] },
+        options:options()
+    });
+
+    const armario = agrupar(dados,"armario");
+    new Chart(document.getElementById("armarioChart"), {
+        type:"bar",
+        data:{ labels:Object.keys(armario), datasets:[{ data:Object.values(armario), backgroundColor:"#111" }] },
+        options:options()
+    });
+
+    const resp = agrupar(dados,"responsavel");
+    new Chart(document.getElementById("respChart"), {
+        type:"bar",
+        data:{ labels:Object.keys(resp), datasets:[{ data:Object.values(resp), backgroundColor:"#555" }] },
+        options:options()
+    });
+
+    const status = agrupar(dados,"status campo");
+    new Chart(document.getElementById("statusCampoChart"), {
+        type:"bar",
+        data:{ labels:Object.keys(status), datasets:[{ data:Object.values(status), backgroundColor:"#ff7a00" }] },
+        options:options()
+    });
+
+    const cluster = agrupar(dados,"cluster");
+    new Chart(document.getElementById("clusterChart"), {
+        type:"bar",
+        data:{ labels:Object.keys(cluster), datasets:[{ data:Object.values(cluster), backgroundColor:"#111" }] },
+        options:options()
+    });
+
+    const custo = {};
+    dados.forEach(d=>{
+        const k = d.cluster || "Sem Info";
+        custo[k] = (custo[k] || 0) + parseCusto(d["custo total"]);
+    });
+
+    new Chart(document.getElementById("custoChart"), {
+        type:"bar",
+        data:{ labels:Object.keys(custo), datasets:[{ data:Object.values(custo), backgroundColor:"#ff7a00" }] },
+        options:options()
+    });
+}
+
+function montarTabela(dados){
+
+    const tbody = document.getElementById("tbody");
+    tbody.innerHTML = "";
+
+    dados.forEach(d=>{
+        tbody.innerHTML += `
+        <tr>
+            <td>${d["id obra"]||""}</td>
+            <td>${d.empresa||""}</td>
+            <td>${d.cluster||""}</td>
+            <td>${d["status campo"]||""}</td>
+            <td>${d.requicao||""}</td>
+            <td>${d["custo total"]||""}</td>
+        </tr>`;
+    });
+}
+
+function popularFiltroCluster(dados){
+
+    const select = document.getElementById("filtroCluster");
+    const clusters = [...new Set(dados.map(d=>d.cluster||"Sem Info"))];
+
+    clusters.forEach(c=>{
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.innerText = c;
+        select.appendChild(opt);
+    });
+}
+
+function filtrarTabela(){
+
+    const c = document.getElementById("filtroCluster").value;
+
+    const filtrado = c ? dadosBase.filter(d => (d.cluster||"Sem Info")===c) : dadosBase;
+
+    montarTabela(filtrado);
+}
+
+function ordenarCusto(){
+
+    ordemCusto = !ordemCusto;
+
+    const dados = [...dadosBase].sort((a,b)=>{
+        return ordemCusto
+            ? parseCusto(b["custo total"]) - parseCusto(a["custo total"])
+            : parseCusto(a["custo total"]) - parseCusto(b["custo total"]);
+    });
+
+    montarTabela(dados);
+}
+
+function resetTabela(){
+    document.getElementById("filtroCluster").value = "";
+    montarTabela(dadosBase);
+}
+
+function exportarExcel(){
+    const ws = XLSX.utils.json_to_sheet(dadosGlobais);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "melhorias");
+    XLSX.writeFile(wb, "melhorias.xlsx");
+}
+
+carregar();
+
+</script>
+
+</body>
+</html>

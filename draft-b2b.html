@@ -53,7 +53,6 @@ h2{
     background:rgba(255,122,0,.08);
 }
 
-/* BOTÕES PADRÃO ERP */
 .btn-dark{
     background:#111;
     border:none;
@@ -70,56 +69,50 @@ h2{
     background:#ffd633;
 }
 
+.filter-box{
+    background:#fff;
+    padding:10px;
+    border-radius:10px;
+    box-shadow:0 3px 10px rgba(0,0,0,.06);
+}
+
 </style>
 
 </head>
+
 <body>
 
 <div class="container-fluid p-4">
 
 <h2 class="mb-4">Dashboard Projetos B2B</h2>
 
-<!-- BOTÕES ALINHADOS À DIREITA -->
 <div class="d-flex justify-content-end gap-2 mb-3">
-
-    <a href="painel.html" class="btn btn-dark px-4">
-        ← Voltar ao Painel
-    </a>
-
-    <button class="btn btn-warning px-4" onclick="exportarExcel()">
-        Exportar Excel
-    </button>
-
+    <a href="painel.html" class="btn btn-dark px-4">← Voltar ao Painel</a>
+    <button class="btn btn-warning px-4" onclick="exportarExcel()">Exportar Excel</button>
 </div>
 
 <!-- KPI -->
 <div class="row g-3 mb-4">
 
 <div class="col-md-4">
-<div class="card card-kpi">
-<div class="card-body text-center">
+<div class="card card-kpi"><div class="card-body text-center">
 <div>Total Projetos</div>
 <div id="totalProjetos" class="kpi-value">0</div>
-</div>
-</div>
+</div></div>
 </div>
 
 <div class="col-md-4">
-<div class="card card-kpi">
-<div class="card-body text-center">
+<div class="card card-kpi"><div class="card-body text-center">
 <div>Entregues</div>
 <div id="entregues" class="kpi-value">0</div>
-</div>
-</div>
+</div></div>
 </div>
 
 <div class="col-md-4">
-<div class="card card-kpi">
-<div class="card-body text-center">
+<div class="card card-kpi"><div class="card-body text-center">
 <div>Pendentes</div>
 <div id="pendentes" class="kpi-value">0</div>
-</div>
-</div>
+</div></div>
 </div>
 
 </div>
@@ -127,37 +120,46 @@ h2{
 <!-- GRÁFICOS -->
 <div class="row g-4 mb-4">
 
-    <div class="col-lg-6">
-        <div class="card chart-card">
-            <h5>Entregues x Pendentes</h5>
-            <canvas id="entregaChart"></canvas>
-        </div>
-    </div>
+<div class="col-lg-6">
+<div class="card chart-card">
+<h5>Entregues x Pendentes</h5>
+<canvas id="entregaChart"></canvas>
+</div>
+</div>
 
-    <div class="col-lg-6">
-        <div class="card chart-card">
-            <h5>Status AutoCAD</h5>
-            <canvas id="autocadChart"></canvas>
-        </div>
-    </div>
+<div class="col-lg-6">
+<div class="card chart-card">
+<h5>Status AutoCAD</h5>
+<canvas id="autocadChart"></canvas>
+</div>
+</div>
 
 </div>
 
-<div class="row g-4 mb-4">
+<!-- FILTROS -->
+<div class="filter-box mb-3">
 
-    <div class="col-lg-6">
-        <div class="card chart-card">
-            <h5>Projetos por Responsável</h5>
-            <canvas id="responsavelChart"></canvas>
-        </div>
-    </div>
+<div class="row g-2">
 
-    <div class="col-lg-6">
-        <div class="card chart-card">
-            <h5>Projetos por Projetista</h5>
-            <canvas id="projetistaChart"></canvas>
-        </div>
-    </div>
+<div class="col-md-4">
+<select id="filtroResponsavel" class="form-select" onchange="filtrarTabela()">
+<option value="">Todos responsáveis</option>
+</select>
+</div>
+
+<div class="col-md-4">
+<select id="ordemPrevisao" class="form-select" onchange="filtrarTabela()">
+<option value="">Ordenar por previsão</option>
+<option value="asc">Mais próximo</option>
+<option value="desc">Mais distante</option>
+</select>
+</div>
+
+<div class="col-md-4">
+<button class="btn btn-dark w-100" onclick="limparFiltros()">Limpar filtros</button>
+</div>
+
+</div>
 
 </div>
 
@@ -196,6 +198,7 @@ h2{
 <script>
 
 let projetosGlobais = [];
+let projetosFiltrados = [];
 
 const API_URL =
 "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec";
@@ -216,24 +219,35 @@ async function carregar(){
 
     const projetos = data.b2b || [];
     projetosGlobais = projetos;
-
-    const entregues = projetos.filter(p =>
-        String(p.entregue || "").trim().toUpperCase() === "OK"
-    ).length;
-
-    const pendentes = projetos.filter(p =>
-        String(p.entregue || "").trim().toUpperCase() === "PENDENTE"
-    ).length;
+    projetosFiltrados = [...projetos];
 
     document.getElementById("totalProjetos").innerText = projetos.length;
-    document.getElementById("entregues").innerText = entregues;
-    document.getElementById("pendentes").innerText = pendentes;
 
-    montarGraficos(projetos, entregues, pendentes);
+    preencherFiltroResponsavel(projetos);
+
+    montarGraficos(projetos);
     montarTabela(projetos);
 }
 
-function montarGraficos(projetos, entregues, pendentes){
+function preencherFiltroResponsavel(dados){
+    const select = document.getElementById("filtroResponsavel");
+    const resp = [...new Set(dados.map(d => d.responsavel).filter(Boolean))];
+
+    resp.forEach(r=>{
+        const opt = document.createElement("option");
+        opt.value = r;
+        opt.innerText = r;
+        select.appendChild(opt);
+    });
+}
+
+function montarGraficos(projetos){
+
+    const entregues = projetos.filter(p => (p.entregue||"").toUpperCase()=="OK").length;
+    const pendentes = projetos.length - entregues;
+
+    document.getElementById("entregues").innerText = entregues;
+    document.getElementById("pendentes").innerText = pendentes;
 
     new Chart(document.getElementById("entregaChart"), {
         type:"doughnut",
@@ -241,61 +255,50 @@ function montarGraficos(projetos, entregues, pendentes){
             labels:["Entregues","Pendentes"],
             datasets:[{
                 data:[entregues, pendentes],
-                backgroundColor:["#ff7a00","#111111"]
+                backgroundColor:["#ff7a00","#111"]
             }]
         }
     });
 
-    const responsavel = agrupar(projetos,"responsavel");
+    const autocad = agrupar(projetos,"projeto autocad");
 
-    new Chart(document.getElementById("responsavelChart"), {
+    new Chart(document.getElementById("autocadChart"), {
         type:"bar",
         data:{
-            labels:Object.keys(responsavel),
+            labels:Object.keys(autocad),
             datasets:[{
-                label:"Projetos",
-                data:Object.values(responsavel),
+                label:"AutoCAD",
+                data:Object.values(autocad),
                 backgroundColor:"#ff7a00"
             }]
         }
     });
+}
 
-    const projetista = agrupar(projetos,"projetista");
+function filtrarTabela(){
 
-    new Chart(document.getElementById("projetistaChart"), {
-        type:"bar",
-        data:{
-            labels:Object.keys(projetista),
-            datasets:[{
-                label:"Projetos",
-                data:Object.values(projetista),
-                backgroundColor:"#111111"
-            }]
-        }
+    const resp = document.getElementById("filtroResponsavel").value;
+    const ordem = document.getElementById("ordemPrevisao").value;
+
+    projetosFiltrados = projetosGlobais.filter(p=>{
+        return !resp || p.responsavel == resp;
     });
 
-    let concluido = 0;
-    let elaboracao = 0;
+    if(ordem){
+        projetosFiltrados.sort((a,b)=>{
+            return ordem=="asc"
+            ? new Date(a.previsao) - new Date(b.previsao)
+            : new Date(b.previsao) - new Date(a.previsao);
+        });
+    }
 
-    projetos.forEach(p=>{
-        const status = String(p["projeto autocad"] || "").trim().toUpperCase();
-        if(status === "SIM"){
-            concluido++;
-        } else {
-            elaboracao++;
-        }
-    });
+    montarTabela(projetosFiltrados);
+}
 
-    new Chart(document.getElementById("autocadChart"), {
-        type:"pie",
-        data:{
-            labels:["Concluído","Em Elaboração"],
-            datasets:[{
-                data:[concluido, elaboracao],
-                backgroundColor:["#ff7a00","#111111"]
-            }]
-        }
-    });
+function limparFiltros(){
+    document.getElementById("filtroResponsavel").value="";
+    document.getElementById("ordemPrevisao").value="";
+    filtrarTabela();
 }
 
 function montarTabela(projetos){
@@ -304,50 +307,32 @@ function montarTabela(projetos){
     tbody.innerHTML = "";
 
     projetos.forEach(p=>{
-
-        const status = String(p.entregue || "").trim().toUpperCase();
-
-        let statusClass = "";
-        if(status === "OK"){
-            statusClass = "status-ok";
-        } else if(status === "PENDENTE"){
-            statusClass = "status-pendente";
-        }
-
         tbody.innerHTML += `
         <tr>
-            <td>${p.projeto || ""}</td>
-            <td>${p.projetista || ""}</td>
-            <td>${p["projeto autocad"] || ""}</td>
-            <td>${p.responsavel || ""}</td>
-            <td class="${statusClass}">${p.entregue || ""}</td>
-            <td>${p.previsao || ""}</td>
-        </tr>
-        `;
+            <td>${p.projeto||""}</td>
+            <td>${p.projetista||""}</td>
+            <td>${p["projeto autocad"]||""}</td>
+            <td>${p.responsavel||""}</td>
+            <td>${p.entregue||""}</td>
+            <td>${p.previsao||""}</td>
+        </tr>`;
     });
 }
 
 function exportarExcel(){
 
-    if(!projetosGlobais.length){
-        alert("Nenhum dado para exportar");
-        return;
-    }
-
-    const dados = projetosGlobais.map(p=>({
-        Projeto: p.projeto || "",
-        Projetista: p.projetista || "",
-        AutoCAD: p["projeto autocad"] || "",
-        Responsavel: p.responsavel || "",
-        Entregue: p.entregue || "",
-        Previsao: p.previsao || ""
+    const dados = projetosFiltrados.map(p=>({
+        Projeto:p.projeto||"",
+        Projetista:p.projetista||"",
+        AutoCAD:p["projeto autocad"]||"",
+        Responsavel:p.responsavel||"",
+        Entregue:p.entregue||"",
+        Previsao:p.previsao||""
     }));
 
     const ws = XLSX.utils.json_to_sheet(dados);
     const wb = XLSX.utils.book_new();
-
     XLSX.utils.book_append_sheet(wb, ws, "B2B");
-
     XLSX.writeFile(wb, "projetos_b2b.xlsx");
 }
 

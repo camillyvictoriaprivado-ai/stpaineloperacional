@@ -6,6 +6,7 @@
 <title>Controle de Pendências</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
@@ -17,7 +18,6 @@ body{
     color:#111;
 }
 
-/* HEADER */
 .header{
     background:#fff;
     padding:20px;
@@ -27,48 +27,17 @@ body{
     border-bottom:2px solid #ff7a00;
 }
 
-.header h1{
-    margin:0;
-    font-size:18px;
-}
-
-.header div{
-    display:flex;
-    gap:10px;
-}
-
-/* BOTÕES PADRÃO */
 .btn{
     border:none;
     padding:10px 14px;
     border-radius:6px;
     cursor:pointer;
     font-family:'Orbitron', sans-serif;
-    transition:0.2s;
 }
 
-/* PRETO */
-.btn-dark-custom{
-    background:#111;
-    color:#fff;
-}
+.btn-dark-custom{ background:#111; color:#fff; }
+.btn-yellow{ background:#ffcc00; color:#111; font-weight:600; }
 
-.btn-dark-custom:hover{
-    background:#333;
-}
-
-/* AMARELO */
-.btn-yellow{
-    background:#ffcc00;
-    color:#111;
-    font-weight:600;
-}
-
-.btn-yellow:hover{
-    background:#ffd633;
-}
-
-/* KPIs */
 .kpis{
     display:grid;
     grid-template-columns:repeat(3,1fr);
@@ -78,14 +47,8 @@ body{
 
 .kpi{
     background:#fff;
-    border:1px solid rgba(0,0,0,0.08);
     border-radius:12px;
     padding:18px;
-}
-
-.kpi h3{
-    margin:0;
-    font-size:14px;
 }
 
 .kpi p{
@@ -95,21 +58,18 @@ body{
     font-weight:bold;
 }
 
-/* FILTER */
 .filter{
     padding:0 20px 20px;
 }
 
-input{
+input, select{
     padding:10px;
-    width:100%;
-    max-width:300px;
     border:1px solid #ddd;
     border-radius:8px;
-    font-family:'Orbitron', sans-serif;
+    font-family:'Orbitron';
+    margin-right:10px;
 }
 
-/* TABLE */
 .table{
     padding:20px;
 }
@@ -126,7 +86,6 @@ th{
     background:#111;
     color:#fff;
     padding:12px;
-    text-align:left;
 }
 
 td{
@@ -134,74 +93,89 @@ td{
     border-bottom:1px solid #eee;
 }
 
-.status-aguardando{
-    color:#ff7a00;
-    font-weight:bold;
+.status-aguardando{ color:#ff7a00; font-weight:bold; }
+.status-tratada{ color:#2ecc71; font-weight:bold; }
+
+.charts{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:15px;
+    padding:0 20px 20px;
 }
 
-.status-tratada{
-    color:#2ecc71;
-    font-weight:bold;
+.card-chart{
+    background:#fff;
+    padding:15px;
+    border-radius:12px;
 }
-
 </style>
-
 </head>
 
 <body>
 
-<!-- HEADER PADRONIZADO -->
 <div class="header">
     <h1>CONTROLE DE PENDÊNCIAS</h1>
 
     <div>
-        <button class="btn btn-dark-custom" onclick="window.location.href='painel.html'">
-            ← VOLTAR AO PAINEL
-        </button>
-
-        <button class="btn btn-yellow" onclick="exportarExcel()">
-            EXPORTAR EXCEL
-        </button>
+        <button class="btn btn-dark-custom" onclick="window.location.href='painel.html'">← VOLTAR</button>
+        <button class="btn btn-yellow" onclick="exportarExcel()">EXPORTAR EXCEL</button>
     </div>
 </div>
 
 <!-- KPIs -->
 <div class="kpis">
-
-    <div class="kpi">
-        <h3>Total Pendências</h3>
-        <p id="total">0</p>
-    </div>
-
-    <div class="kpi">
-        <h3>Aguardando</h3>
-        <p id="aguardando">0</p>
-    </div>
-
-    <div class="kpi">
-        <h3>Tratadas</h3>
-        <p id="tratadas">0</p>
-    </div>
-
+    <div class="kpi"><h3>Total</h3><p id="total">0</p></div>
+    <div class="kpi"><h3>Aguardando</h3><p id="aguardando">0</p></div>
+    <div class="kpi"><h3>Tratadas</h3><p id="tratadas">0</p></div>
 </div>
 
-<!-- FILTER -->
+<!-- FILTROS -->
 <div class="filter">
-    <input id="search" onkeyup="filter()" placeholder="Buscar pendência...">
+    <input id="search" placeholder="Buscar material..." oninput="aplicarFiltros()">
+
+    <select id="filtroCluster" onchange="aplicarFiltros()">
+        <option value="">Todos clusters</option>
+    </select>
+
+    <select id="filtroStatus" onchange="aplicarFiltros()">
+        <option value="">Todos status</option>
+        <option value="AGUARDANDO">Aguardando</option>
+        <option value="TRATADA">Tratada</option>
+    </select>
 </div>
 
-<!-- TABLE -->
+<!-- CHARTS -->
+<div class="charts">
+
+    <div class="card-chart">
+        <canvas id="statusChart"></canvas>
+    </div>
+
+    <div class="card-chart">
+        <canvas id="clusterChart"></canvas>
+    </div>
+
+</div>
+
+<div class="charts">
+
+    <div class="card-chart" style="grid-column:1 / span 2;">
+        <canvas id="materialChart"></canvas>
+    </div>
+
+</div>
+
+<!-- TABELA -->
 <div class="table">
 <table>
 <thead>
 <tr>
-    <th>Título</th>
-    <th>Responsável</th>
-    <th>Prioridade</th>
+    <th>Material</th>
+    <th>Operadora</th>
+    <th>Cluster</th>
     <th>Status</th>
 </tr>
 </thead>
-
 <tbody id="tbody"></tbody>
 </table>
 </div>
@@ -210,104 +184,168 @@ td{
 
 const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec";
 
-let dados = [];
+let dadosOriginais = [];
+let dadosFiltrados = [];
 
-function get(obj, key){
-    return (obj[key] || obj[key.toLowerCase()] || "").toString();
-}
+let chartStatus, chartCluster, chartMaterial;
 
 function norm(v){
-    return (v || "").toString().trim().toUpperCase();
+    return (v||"").toString().toUpperCase();
+}
+
+function get(o,k){
+    return (o[k]||"").toString();
+}
+
+function agrupar(lista,campo){
+    const m={};
+    lista.forEach(i=>{
+        const k=i[campo]||"Sem Info";
+        m[k]=(m[k]||0)+1;
+    });
+    return m;
 }
 
 async function load(){
 
-    const res = await fetch(API_URL + "?v=" + Date.now());
+    const res = await fetch(API_URL+"?v="+Date.now());
     const data = await res.json();
 
-    const pend = data.pendencias || [];
-    dados = pend;
+    dadosOriginais = data.pendencias || [];
+    dadosFiltrados = [...dadosOriginais];
 
-    document.getElementById("total").innerText = pend.length;
+    preencherFiltroCluster();
 
-    const aguardando = pend.filter(i =>
-        norm(i.status) === "AGUARDANDO"
-        || norm(i.status) === "AGUARDANDO SALDO"
-    ).length;
+    renderTudo(dadosFiltrados);
+}
 
-    const tratadas = pend.filter(i =>
-        norm(i.status).includes("TRATADA")
-    ).length;
+function preencherFiltroCluster(){
+    const clusters = [...new Set(dadosOriginais.map(d=>d.cluster))];
 
-    document.getElementById("aguardando").innerText = aguardando;
-    document.getElementById("tratadas").innerText = tratadas;
+    const select = document.getElementById("filtroCluster");
+    clusters.forEach(c=>{
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        select.appendChild(opt);
+    });
+}
 
-    render(pend);
+function aplicarFiltros(){
+
+    const txt = document.getElementById("search").value.toLowerCase();
+    const cluster = document.getElementById("filtroCluster").value;
+    const status = document.getElementById("filtroStatus").value;
+
+    dadosFiltrados = dadosOriginais.filter(i=>{
+
+        const okText =
+            get(i,"material").toLowerCase().includes(txt);
+
+        const okCluster = cluster ? i.cluster === cluster : true;
+
+        const okStatus = status ? norm(i.status).includes(status) : true;
+
+        return okText && okCluster && okStatus;
+    });
+
+    renderTudo(dadosFiltrados);
+}
+
+function renderTudo(lista){
+
+    atualizarKPIs(lista);
+    render(lista);
+    charts(lista);
+}
+
+function atualizarKPIs(lista){
+
+    const ag = lista.filter(i=>norm(i.status).includes("AGUARDANDO")).length;
+    const tr = lista.filter(i=>norm(i.status).includes("TRATADA")).length;
+
+    document.getElementById("total").innerText = lista.length;
+    document.getElementById("aguardando").innerText = ag;
+    document.getElementById("tratadas").innerText = tr;
+}
+
+function charts(lista){
+
+    const ag = lista.filter(i=>norm(i.status).includes("AGUARDANDO")).length;
+    const tr = lista.filter(i=>norm(i.status).includes("TRATADA")).length;
+
+    if(chartStatus) chartStatus.destroy();
+    chartStatus = new Chart(document.getElementById("statusChart"),{
+        type:"doughnut",
+        data:{
+            labels:["Aguardando","Tratadas"],
+            datasets:[{data:[ag,tr],backgroundColor:["#ff7a00","#2ecc71"]}]
+        }
+    });
+
+    if(chartCluster) chartCluster.destroy();
+    const cluster = agrupar(lista,"cluster");
+    chartCluster = new Chart(document.getElementById("clusterChart"),{
+        type:"bar",
+        data:{
+            labels:Object.keys(cluster),
+            datasets:[{
+                label:"Clusters",
+                data:Object.values(cluster),
+                backgroundColor:"#111"
+            }]
+        }
+    });
+
+    if(chartMaterial) chartMaterial.destroy();
+    const material = agrupar(lista,"material");
+
+    chartMaterial = new Chart(document.getElementById("materialChart"),{
+        type:"bar",
+        data:{
+            labels:Object.keys(material),
+            datasets:[{
+                label:"Material Ofensor",
+                data:Object.values(material),
+                backgroundColor:"#ff7a00"
+            }]
+        },
+        options:{
+            indexAxis:'y'
+        }
+    });
 }
 
 function render(lista){
 
-    const tbody = document.getElementById("tbody");
-    tbody.innerHTML = "";
+    const tbody=document.getElementById("tbody");
+    tbody.innerHTML="";
 
     lista.forEach(i=>{
-
-        const material = get(i,"material");
-        const operadora = get(i,"operadora");
-        const cluster = get(i,"cluster");
-        const status = get(i,"status");
-
-        tbody.innerHTML += `
+        tbody.innerHTML+=`
         <tr>
-            <td>${material}</td>
-            <td>${operadora}</td>
-            <td>${cluster}</td>
-            <td class="${
-                norm(status).includes("TRATADA")
-                ? "status-tratada"
-                : "status-aguardando"
-            }">
-                ${status}
+            <td>${get(i,"material")}</td>
+            <td>${get(i,"operadora")}</td>
+            <td>${get(i,"cluster")}</td>
+            <td class="${norm(i.status).includes("TRATADA")?"status-tratada":"status-aguardando"}">
+                ${get(i,"status")}
             </td>
         </tr>`;
     });
 }
 
-function filter(){
-
-    const v = document.getElementById("search").value.toLowerCase();
-
-    const filtrado = dados.filter(i =>
-        get(i,"material").toLowerCase().includes(v) ||
-        get(i,"operadora").toLowerCase().includes(v) ||
-        get(i,"cluster").toLowerCase().includes(v) ||
-        get(i,"codigo").toLowerCase().includes(v)
-    );
-
-    render(filtrado);
-}
-
-/* EXPORT EXCEL */
 function exportarExcel(){
 
-    if(!dados.length){
-        alert("Nenhum dado para exportar");
-        return;
-    }
+    const ws=XLSX.utils.json_to_sheet(dadosFiltrados.map(i=>({
+        Material:get(i,"material"),
+        Operadora:get(i,"operadora"),
+        Cluster:get(i,"cluster"),
+        Status:get(i,"status")
+    })));
 
-    const dadosExport = dados.map(i=>({
-        Titulo: get(i,"material"),
-        Responsavel: get(i,"operadora"),
-        Prioridade: get(i,"cluster"),
-        Status: get(i,"status")
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(dadosExport);
-    const wb = XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(wb, ws, "Pendencias");
-
-    XLSX.writeFile(wb, "pendencias.xlsx");
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,"pendencias");
+    XLSX.writeFile(wb,"pendencias.xlsx");
 }
 
 load();
