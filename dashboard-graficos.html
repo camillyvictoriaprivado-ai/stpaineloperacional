@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Gerencial Avançado</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#f5f7fb;
+}
+
+.header{
+    padding:20px;
+    background:#fff;
+    border-bottom:2px solid #ff7a00;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:15px;
+    padding:20px;
+}
+
+.card{
+    background:#fff;
+    padding:15px;
+    border-radius:10px;
+}
+
+.kpis{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:15px;
+    padding:20px;
+}
+
+.kpi{
+    background:#fff;
+    padding:15px;
+    border-radius:10px;
+}
+
+.kpi h3{margin:0;font-size:14px}
+.kpi p{font-size:22px;color:#ff7a00;font-weight:bold}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<h2>Dashboard Gerencial Avançado</h2>
+</div>
+
+<div class="kpis">
+<div class="kpi"><h3>Total</h3><p id="total">0</p></div>
+<div class="kpi"><h3>Concluído</h3><p id="conc">0</p></div>
+<div class="kpi"><h3>Aguardando</h3><p id="agu">0</p></div>
+<div class="kpi"><h3>Clusters</h3><p id="clu">0</p></div>
+</div>
+
+<div class="grid">
+
+<div class="card">
+<h3>Tendência por Status (linha)</h3>
+<canvas id="line"></canvas>
+</div>
+
+<div class="card">
+<h3>Top Clusters (ranking)</h3>
+<canvas id="rankCluster"></canvas>
+</div>
+
+<div class="card">
+<h3>Top Responsáveis Fibra</h3>
+<canvas id="rankFibra"></canvas>
+</div>
+
+<div class="card">
+<h3>Distribuição Real (%)</h3>
+<canvas id="donut"></canvas>
+</div>
+
+</div>
+
+<script>
+
+const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec";
+
+let lineChart, rankCluster, rankFibra, donut;
+
+function norm(v){
+    return (v||"").toString().toUpperCase().trim();
+}
+
+async function load(){
+
+const res = await fetch(API_URL + "?t=" + Date.now());
+const data = await res.json();
+const base = data.base || [];
+
+// ================= STATUS =================
+const concluido = base.filter(i => norm(i.status)=="CONCLUIDO").length;
+const aguardando = base.filter(i => norm(i.status).includes("AGUARDANDO")).length;
+const total = base.length;
+
+// ================= CLUSTER =================
+const cluster = {};
+base.forEach(i=>{
+    const c = i.cluster || "SEM";
+    cluster[c] = (cluster[c]||0)+1;
+});
+
+// ================= FIBRA =================
+const fibra = {};
+base.forEach(i=>{
+    const f = i["responsavel fibra"] || "SEM";
+    fibra[f] = (fibra[f]||0)+1;
+});
+
+// ================= KPIs =================
+document.getElementById("total").innerText = total;
+document.getElementById("conc").innerText = concluido;
+document.getElementById("agu").innerText = aguardando;
+document.getElementById("clu").innerText = Object.keys(cluster).length;
+
+// ================= LINE (tendência simulada por índice) =================
+if(lineChart) lineChart.destroy();
+
+const last = base.slice(-20);
+
+lineChart = new Chart(document.getElementById("line"),{
+type:"line",
+data:{
+labels:last.map((_,i)=>i+1),
+datasets:[{
+label:"Status Concluído (últimos registros)",
+data:last.map(i => norm(i.status)=="CONCLUIDO"?1:0),
+borderColor:"#ff7a00"
+}]
+}
+});
+
+// ================= RANK CLUSTER =================
+if(rankCluster) rankCluster.destroy();
+
+const topCluster = Object.entries(cluster)
+.sort((a,b)=>b[1]-a[1])
+.slice(0,8);
+
+rankCluster = new Chart(document.getElementById("rankCluster"),{
+type:"bar",
+data:{
+labels:topCluster.map(i=>i[0]),
+datasets:[{
+data:topCluster.map(i=>i[1]),
+backgroundColor:"#ff7a00"
+}]
+},
+options:{
+indexAxis:"y"
+}
+});
+
+// ================= RANK FIBRA =================
+if(rankFibra) rankFibra.destroy();
+
+const topFibra = Object.entries(fibra)
+.sort((a,b)=>b[1]-a[1])
+.slice(0,8);
+
+rankFibra = new Chart(document.getElementById("rankFibra"),{
+type:"bar",
+data:{
+labels:topFibra.map(i=>i[0]),
+datasets:[{
+data:topFibra.map(i=>i[1]),
+backgroundColor:"#111"
+}]
+},
+options:{
+indexAxis:"y"
+}
+});
+
+// ================= DONUT =================
+if(donut) donut.destroy();
+
+donut = new Chart(document.getElementById("donut"),{
+type:"doughnut",
+data:{
+labels:["Concluído","Outros"],
+datasets:[{
+data:[concluido,total-concluido],
+backgroundColor:["#ff7a00","#eee"]
+}]
+}
+});
+
+}
+
+load();
+setInterval(load,30000);
+
+</script>
+
+</body>
+</html>
