@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Controle de Pendências</title>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
 
@@ -27,20 +29,43 @@ body{
 
 .header h1{
     margin:0;
-    color:#111;
+    font-size:18px;
 }
 
+.header div{
+    display:flex;
+    gap:10px;
+}
+
+/* BOTÕES PADRÃO */
 .btn{
-    background:#ff7a00;
-    color:#fff;
     border:none;
     padding:10px 14px;
     border-radius:6px;
     cursor:pointer;
+    font-family:'Orbitron', sans-serif;
+    transition:0.2s;
 }
 
-.btn:hover{
-    background:#ff8f2f;
+/* PRETO */
+.btn-dark-custom{
+    background:#111;
+    color:#fff;
+}
+
+.btn-dark-custom:hover{
+    background:#333;
+}
+
+/* AMARELO */
+.btn-yellow{
+    background:#ffcc00;
+    color:#111;
+    font-weight:600;
+}
+
+.btn-yellow:hover{
+    background:#ffd633;
 }
 
 /* KPIs */
@@ -56,13 +81,11 @@ body{
     border:1px solid rgba(0,0,0,0.08);
     border-radius:12px;
     padding:18px;
-    box-shadow:0 3px 10px rgba(0,0,0,0.05);
 }
 
 .kpi h3{
     margin:0;
     font-size:14px;
-    color:#111;
 }
 
 .kpi p{
@@ -121,40 +144,25 @@ td{
     font-weight:bold;
 }
 
-.back{
-    padding: 15px 20px;
-}
-
-.back button{
-    background: transparent;
-    border: 1px solid #ff7a00;
-    color: #ff7a00;
-    padding: 10px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-family:'Orbitron', sans-serif;
-    transition: 0.2s;
-}
-
-.back button:hover{
-    background:#ff7a00;
-    color:#fff;
-    box-shadow:0 0 10px rgba(255,122,0,0.4);
-}
-
 </style>
 
 </head>
 
 <body>
 
+<!-- HEADER PADRONIZADO -->
 <div class="header">
     <h1>CONTROLE DE PENDÊNCIAS</h1>
-    <button class="btn" onclick="load()">Atualizar</button>
-</div>
 
-<div class="back">
-    <button onclick="window.location.href='painel.html'">← VOLTAR</button>
+    <div>
+        <button class="btn btn-dark-custom" onclick="window.location.href='painel.html'">
+            ← VOLTAR AO PAINEL
+        </button>
+
+        <button class="btn btn-yellow" onclick="exportarExcel()">
+            EXPORTAR EXCEL
+        </button>
+    </div>
 </div>
 
 <!-- KPIs -->
@@ -204,12 +212,10 @@ const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJ
 
 let dados = [];
 
-/* normalizador */
 function get(obj, key){
     return (obj[key] || obj[key.toLowerCase()] || "").toString();
 }
 
-/* status normalizado */
 function norm(v){
     return (v || "").toString().trim().toUpperCase();
 }
@@ -222,7 +228,6 @@ async function load(){
     const pend = data.pendencias || [];
     dados = pend;
 
-    // KPIs
     document.getElementById("total").innerText = pend.length;
 
     const aguardando = pend.filter(i =>
@@ -282,11 +287,30 @@ function filter(){
     render(filtrado);
 }
 
-load();
+/* EXPORT EXCEL */
+function exportarExcel(){
 
-function voltar(){
-    window.location.href = "index.html";
+    if(!dados.length){
+        alert("Nenhum dado para exportar");
+        return;
+    }
+
+    const dadosExport = dados.map(i=>({
+        Titulo: get(i,"material"),
+        Responsavel: get(i,"operadora"),
+        Prioridade: get(i,"cluster"),
+        Status: get(i,"status")
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dadosExport);
+    const wb = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(wb, ws, "Pendencias");
+
+    XLSX.writeFile(wb, "pendencias.xlsx");
 }
+
+load();
 
 </script>
 

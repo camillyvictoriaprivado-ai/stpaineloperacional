@@ -6,6 +6,7 @@
 <title>Controle de Almoxarifado</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
@@ -29,21 +30,44 @@ body{
 
 .header h1{
     margin:0;
-    color:#111;
+    font-size:20px;
 }
 
+/* BOTÕES PADRÃO */
+.header div{
+    display:flex;
+    gap:10px;
+}
+
+/* BOTÃO BASE */
 .btn{
-    background:#ff7a00;
-    color:#fff;
     border:none;
     padding:10px 14px;
     border-radius:6px;
     cursor:pointer;
     font-family:'Orbitron', sans-serif;
+    transition:0.2s;
 }
 
-.btn:hover{
-    background:#ff8f2f;
+/* PRETO - VOLTAR */
+.btn-dark-custom{
+    background:#111;
+    color:#fff;
+}
+
+.btn-dark-custom:hover{
+    background:#333;
+}
+
+/* AMARELO - EXPORTAR */
+.btn-yellow{
+    background:#ffcc00;
+    color:#111;
+    font-weight:600;
+}
+
+.btn-yellow:hover{
+    background:#ffd633;
 }
 
 /* KPIs */
@@ -59,18 +83,11 @@ body{
     border:1px solid rgba(0,0,0,0.08);
     border-radius:12px;
     padding:18px;
-    box-shadow:0 3px 10px rgba(0,0,0,0.05);
-    transition:.2s;
-}
-
-.kpi:hover{
-    transform:translateY(-3px);
 }
 
 .kpi h3{
     margin:0;
     font-size:14px;
-    color:#111;
 }
 
 .kpi p{
@@ -126,7 +143,6 @@ th{
 td{
     padding:12px;
     border-bottom:1px solid #eee;
-    font-family:'Orbitron', sans-serif;
 }
 
 .low{
@@ -139,6 +155,7 @@ td{
     font-weight:bold;
 }
 
+/* BACK BUTTON */
 .back{
     padding: 15px 20px;
 }
@@ -150,14 +167,11 @@ td{
     padding: 10px 14px;
     border-radius: 6px;
     cursor: pointer;
-    font-family: 'Orbitron', sans-serif;
-    transition: 0.2s;
 }
 
 .back button:hover{
     background:#ff7a00;
     color:#fff;
-    box-shadow:0 0 10px rgba(255,122,0,0.4);
 }
 
 </style>
@@ -166,11 +180,22 @@ td{
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
     <h1>CONTROLE DE ALMOXARIFADO</h1>
-    <button class="btn" onclick="load()">Atualizar</button>
+
+    <div>
+        <button class="btn btn-dark-custom" onclick="window.location.href='painel.html'">
+            ← VOLTAR AO PAINEL
+        </button>
+
+        <button class="btn btn-yellow" onclick="exportarExcel()">
+            EXPORTAR EXCEL
+        </button>
+    </div>
 </div>
 
+<!-- VOLTAR (extra opcional mantido) -->
 <div class="back">
     <button onclick="window.location.href='painel.html'">← VOLTAR</button>
 </div>
@@ -233,7 +258,6 @@ const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJ
 let chart;
 let dadosGlobais = [];
 
-/* pega campo seguro */
 function get(obj, key){
     return (obj[key] || obj[key.toLowerCase()] || "").toString();
 }
@@ -246,23 +270,19 @@ async function load(){
     const almox = data.almoxarifado || [];
     dadosGlobais = almox;
 
-    // KPI TOTAL
     document.getElementById("total").innerText = almox.length;
 
-    // ESTOQUE BAIXO (<10)
     const baixo = almox.filter(i =>
         Number(get(i,"saldo")) < 10
     ).length;
     document.getElementById("baixo").innerText = baixo;
 
-    // SALDO TOTAL
     const saldo = almox.reduce((a,b)=>
         a + Number(get(b,"saldo") || 0)
     ,0);
 
     document.getElementById("saldo").innerText = saldo;
 
-    // CLUSTERS
     const clusters = [...new Set(almox.map(i =>
         get(i,"cluster")
     ))];
@@ -271,7 +291,6 @@ async function load(){
 
     renderTable(almox);
 
-    // GRAFICO POR CLUSTER
     const map = {};
 
     almox.forEach(i=>{
@@ -305,7 +324,6 @@ function renderTable(data){
 
     data.forEach(i=>{
 
-        const codigo = get(i,"codigo");
         const material = get(i,"material");
         const cluster = get(i,"cluster");
         const deposito = get(i,"deposito");
@@ -337,11 +355,30 @@ function filter(){
     renderTable(filtrado);
 }
 
-load();
+function exportarExcel(){
 
-function voltar(){
-    window.location.href = "index.html";
+    if(!dadosGlobais.length){
+        alert("Nenhum dado para exportar");
+        return;
+    }
+
+    const dados = dadosGlobais.map(i=>({
+        Material: get(i,"material"),
+        Cluster: get(i,"cluster"),
+        Deposito: get(i,"deposito"),
+        Saldo: Number(get(i,"saldo") || 0),
+        Status: Number(get(i,"saldo") || 0) < 10 ? "Baixo" : "OK"
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dados);
+    const wb = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(wb, ws, "Almoxarifado");
+
+    XLSX.writeFile(wb, "almoxarifado.xlsx");
 }
+
+load();
 
 </script>
 

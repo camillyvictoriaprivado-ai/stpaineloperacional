@@ -53,6 +53,23 @@ h2{
     background:rgba(255,122,0,.08);
 }
 
+/* BOTÕES PADRÃO ERP */
+.btn-dark{
+    background:#111;
+    border:none;
+}
+
+.btn-warning{
+    background:#ffcc00;
+    border:none;
+    color:#111;
+    font-weight:600;
+}
+
+.btn-warning:hover{
+    background:#ffd633;
+}
+
 </style>
 
 </head>
@@ -62,14 +79,14 @@ h2{
 
 <h2 class="mb-4">Dashboard Projetos B2B</h2>
 
-<!-- BOTÕES -->
-<div class="d-flex justify-content-between mb-3">
+<!-- BOTÕES ALINHADOS À DIREITA -->
+<div class="d-flex justify-content-end gap-2 mb-3">
 
-    <a href="painel.html" class="btn btn-dark">
+    <a href="painel.html" class="btn btn-dark px-4">
         ← Voltar ao Painel
     </a>
 
-    <button class="btn btn-warning" onclick="exportarExcel()">
+    <button class="btn btn-warning px-4" onclick="exportarExcel()">
         Exportar Excel
     </button>
 
@@ -198,7 +215,6 @@ async function carregar(){
     const data = await res.json();
 
     const projetos = data.b2b || [];
-
     projetosGlobais = projetos;
 
     const entregues = projetos.filter(p =>
@@ -288,13 +304,23 @@ function montarTabela(projetos){
     tbody.innerHTML = "";
 
     projetos.forEach(p=>{
+
+        const status = String(p.entregue || "").trim().toUpperCase();
+
+        let statusClass = "";
+        if(status === "OK"){
+            statusClass = "status-ok";
+        } else if(status === "PENDENTE"){
+            statusClass = "status-pendente";
+        }
+
         tbody.innerHTML += `
         <tr>
             <td>${p.projeto || ""}</td>
             <td>${p.projetista || ""}</td>
             <td>${p["projeto autocad"] || ""}</td>
             <td>${p.responsavel || ""}</td>
-            <td>${p.entregue || ""}</td>
+            <td class="${statusClass}">${p.entregue || ""}</td>
             <td>${p.previsao || ""}</td>
         </tr>
         `;
