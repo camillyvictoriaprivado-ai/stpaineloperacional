@@ -237,12 +237,12 @@ function uniqueById(arr, key = "id") {
     });
 }
 
-function getStatus(v){
-    return (v || "").toString().trim().toUpperCase();
-}
-
 function get(obj, key){
     return (obj[key] || "").toString();
+}
+
+function getStatus(v){
+    return (v || "").toString().trim().toUpperCase();
 }
 
 async function load(){
@@ -330,9 +330,33 @@ async function load(){
     });
 }
 
-function exportarExcel(){
-    const wb = XLSX.utils.book_new();
-    XLSX.writeFile(wb, "dashboard_diario.xlsx");
+async function exportarExcel(){
+
+    try {
+
+        const res = await fetch(API_URL);
+        const data = await res.json();
+
+        const base = uniqueById(data.base || [], "id");
+
+        console.log("EXPORTANDO BASE:", base); // DEBUG
+
+        if (!base || base.length === 0) {
+            alert("Nenhum dado encontrado na base");
+            return;
+        }
+
+        const ws = XLSX.utils.json_to_sheet(base);
+        const wb = XLSX.utils.book_new();
+
+        XLSX.utils.book_append_sheet(wb, ws, "Base");
+
+        XLSX.writeFile(wb, "dashboard_diario.xlsx");
+
+    } catch (err) {
+        console.error("Erro no export:", err);
+        alert("Erro ao exportar Excel. Veja o console.");
+    }
 }
 
 load();
