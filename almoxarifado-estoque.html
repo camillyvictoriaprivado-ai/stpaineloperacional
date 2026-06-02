@@ -134,7 +134,6 @@ td{
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
     <h1>CONTROLE DE ALMOXARIFADO</h1>
 
@@ -144,7 +143,6 @@ td{
     </div>
 </div>
 
-<!-- KPIs -->
 <div class="kpis">
     <div class="kpi"><h3>Total</h3><p id="total">0</p></div>
     <div class="kpi"><h3>Baixo</h3><p id="baixo">0</p></div>
@@ -152,7 +150,6 @@ td{
     <div class="kpi"><h3>Clusters</h3><p id="clusters">0</p></div>
 </div>
 
-<!-- CHARTS -->
 <div class="charts">
 
     <div class="card">
@@ -170,9 +167,8 @@ td{
         <canvas id="chartMaterial"></canvas>
     </div>
 
-    </div>
+</div>
 
-<!-- FILTERS -->
 <div class="filters">
     <input id="search" placeholder="Buscar material..." oninput="aplicar()">
 
@@ -186,23 +182,16 @@ td{
         <option value="OK">OK</option>
     </select>
 
-    <button class="btn btn-yellow" onclick="limparFiltro()">
-        Limpar Filtros
-    </button>
-
+    <button class="btn btn-yellow" onclick="limparFiltro()">Limpar Filtros</button>
 </div>
 
-<!-- TABLE -->
-<div class="table">
-
-</div>
-
-<!-- TABLE -->
 <div class="table">
 <table>
 <thead>
 <tr>
+    <th>Código</th>
     <th>Material</th>
+    <th>Centro</th>
     <th>Cluster</th>
     <th>Depósito</th>
     <th>Saldo</th>
@@ -212,7 +201,6 @@ td{
 <tbody id="tbody"></tbody>
 </table>
 </div>
-
 
 <script>
 
@@ -227,7 +215,6 @@ let filtroClusterGrafico = "";
 let filtroMaterialGrafico = "";
 
 function num(v){ return Number(v||0); }
-
 function status(s){ return num(s) < 10 ? "BAIXO" : "OK"; }
 
 async function load(){
@@ -266,30 +253,16 @@ function aplicar(){
     filtrados = dados.filter(i=>{
 
         const okT = (i.material||"").toLowerCase().includes(t);
-
-        const okC = cl
-            ? i.cluster === cl
-            : true;
-
-        const okS = st
-            ? status(i.saldo) === st
-            : true;
+        const okC = cl ? i.cluster === cl : true;
+        const okS = st ? status(i.saldo) === st : true;
 
         const okGraficoCluster =
-            filtroClusterGrafico
-            ? (i.cluster || "Sem Info") === filtroClusterGrafico
-            : true;
+            filtroClusterGrafico ? (i.cluster || "") === filtroClusterGrafico : true;
 
         const okGraficoMaterial =
-            filtroMaterialGrafico
-            ? (i.material || "Sem Info") === filtroMaterialGrafico
-            : true;
+            filtroMaterialGrafico ? (i.material || "") === filtroMaterialGrafico : true;
 
-        return okT &&
-               okC &&
-               okS &&
-               okGraficoCluster &&
-               okGraficoMaterial;
+        return okT && okC && okS && okGraficoCluster && okGraficoMaterial;
     });
 
     render();
@@ -314,7 +287,7 @@ function kpis(){
 function charts(){
 
     /* =======================
-       1. PIZZA - CLUSTER
+       1. CLUSTER (PIE)
     ======================= */
     const cluster = {};
     filtrados.forEach(i=>{
@@ -324,37 +297,34 @@ function charts(){
 
     if(c1) c1.destroy();
     c1 = new Chart(document.getElementById("chartCluster"),{
-    type:"pie",
-    data:{
-        labels:Object.keys(cluster),
-        datasets:[{
-            data:Object.values(cluster),
-            backgroundColor:[
-                "#ff7a00",
-                "#111",
-                "#2ecc71",
-                "#ff3b30",
-                "#3498db"
-            ]
-        }]
-    },
-    options:{
-        onClick:(event,elements)=>{
+        type:"pie",
+        data:{
+            labels:Object.keys(cluster),
+            datasets:[{
+                data:Object.values(cluster),
+                backgroundColor:[
+                    "#ff7a00",
+                    "#111",
+                    "#2ecc71",
+                    "#ff3b30",
+                    "#3498db"
+                ]
+            }]
+        },
+        options:{
+            onClick:(event,elements)=>{
+                if(!elements.length) return;
 
-            if(!elements.length) return;
+                const index = elements[0].index;
+                filtroClusterGrafico = Object.keys(cluster)[index];
 
-            const index = elements[0].index;
-
-            filtroClusterGrafico =
-                Object.keys(cluster)[index];
-
-            aplicar();
+                aplicar();
+            }
         }
-    }
-});
+    });
 
     /* =======================
-       2. COLUNA - ESTOQUE
+       2. ESTOQUE (BAR)
     ======================= */
     const estoque = {};
     filtrados.forEach(i=>{
@@ -363,34 +333,30 @@ function charts(){
     });
 
     if(c2) c2.destroy();
-
     c2 = new Chart(document.getElementById("chartStatus"),{
-    type:"bar",
-    data:{
-        labels:Object.keys(estoque),
-        datasets:[{
-            label:"Estoque",
-            data:Object.values(estoque),
-            backgroundColor:"#ff7a00"
-        }]
-    },
-    options:{
-        onClick:(event,elements)=>{
+        type:"bar",
+        data:{
+            labels:Object.keys(estoque),
+            datasets:[{
+                label:"Estoque",
+                data:Object.values(estoque),
+                backgroundColor:"#ff7a00"
+            }]
+        },
+        options:{
+            onClick:(event,elements)=>{
+                if(!elements.length) return;
 
-            if(!elements.length) return;
+                const index = elements[0].index;
+                filtroClusterGrafico = Object.keys(estoque)[index];
 
-            const index = elements[0].index;
-
-            filtroClusterGrafico =
-                Object.keys(estoque)[index];
-
-            aplicar();
+                aplicar();
+            }
         }
-    }
-});
+    });
 
     /* =======================
-       3. LINHA - MATERIAL OFENSOR
+       3. MATERIAL (BAR HORIZONTAL)
     ======================= */
     const material = {};
     filtrados.forEach(i=>{
@@ -404,82 +370,36 @@ function charts(){
 
     if(c3) c3.destroy();
 
-c3 = new Chart(document.getElementById("chartMaterial"),{
-    type:"bar",
-    data:{
-        labels:top.map(i=>i[0]),
-        datasets:[{
-            label:"Qtd de IDs",
-            data:top.map(i=>i[1]),
-            backgroundColor:"#ff7a00",
-            borderColor:"#d96600",
-            borderWidth:1
-        }]
-    },
-    options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        indexAxis:'y',
-
-        onClick:(event,elements)=>{
-
-            if(!elements.length) return;
-
-            const index = elements[0].index;
-            const materialSelecionado = top[index][0];
-
-            document.getElementById("search").value = materialSelecionado;
-
-             filtroMaterialGrafico = materialSelecionado;
-             aplicar();
+    c3 = new Chart(document.getElementById("chartMaterial"),{
+        type:"bar",
+        data:{
+            labels:top.map(i=>i[0]),
+            datasets:[{
+                label:"Qtd de IDs",
+                data:top.map(i=>i[1]),
+                backgroundColor:"#ff7a00",
+                borderColor:"#d96600",
+                borderWidth:1
+            }]
         },
+        options:{
+            indexAxis:'y',
+            responsive:true,
+            maintainAspectRatio:false,
 
-        plugins:{
-            legend:{
-                labels:{
-                    color:"#111",
-                    font:{
-                        family:"Orbitron",
-                        size:12,
-                        weight:"600"
-                    }
-                }
-            },
-            tooltip:{
-                callbacks:{
-                    afterLabel:function(context){
-                        return "Clique para filtrar";
-                    }
-                }
-            }
-        },
+            onClick:(event,elements)=>{
+                if(!elements.length) return;
 
-        scales:{
-            x:{
-                beginAtZero:true,
-                ticks:{
-                    color:"#111",
-                    font:{
-                        family:"Orbitron",
-                        size:12,
-                        weight:"600"
-                    }
-                }
-            },
-            y:{
-                ticks:{
-                    color:"#111",
-                    font:{
-                        family:"Orbitron",
-                        size:12,
-                        weight:"600"
-                    }
-                }
+                const index = elements[0].index;
+                const materialSelecionado = top[index][0];
+
+                document.getElementById("search").value = materialSelecionado;
+
+                filtroMaterialGrafico = materialSelecionado;
+                aplicar();
             }
         }
-    }
-});
-
+    });
 }
 
 function render(){
@@ -493,9 +413,11 @@ function render(){
 
         tb.innerHTML+=`
         <tr>
-            <td>${i.material||""}</td>
-            <td>${i.cluster||""}</td>
-            <td>${i.deposito||""}</td>
+            <td>${i.codigo || i.cod || ""}</td>
+            <td>${i.material || ""}</td>
+            <td>${i.centro || ""}</td>
+            <td>${i.cluster || ""}</td>
+            <td>${i.deposito || ""}</td>
             <td>${num(i.saldo)}</td>
             <td class="${s==="BAIXO"?"low":"ok"}">${s}</td>
         </tr>`;
@@ -505,7 +427,9 @@ function render(){
 function exportarExcel(){
 
     const ws=XLSX.utils.json_to_sheet(filtrados.map(i=>({
+        Codigo:i.codigo,
         Material:i.material,
+        Centro:i.centro,
         Cluster:i.cluster,
         Deposito:i.deposito,
         Saldo:num(i.saldo),
@@ -516,8 +440,6 @@ function exportarExcel(){
     XLSX.utils.book_append_sheet(wb,ws,"almox");
     XLSX.writeFile(wb,"almoxarifado.xlsx");
 }
-
-load();
 
 function limparFiltro(){
 
@@ -534,6 +456,8 @@ function limparFiltro(){
     kpis();
     charts();
 }
+
+load();
 
 </script>
 
