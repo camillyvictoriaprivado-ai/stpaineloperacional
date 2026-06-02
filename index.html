@@ -82,36 +82,21 @@ async function login(){
 
     const user = document.getElementById("user").value.trim();
     const pass = document.getElementById("pass").value.trim();
-    const msg = document.getElementById("msg");
 
-    msg.innerText = "";
+    const url = `https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec?type=login&email=${user}&senha=${pass}`;
 
-    const url = `https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec?type=login&email=${encodeURIComponent(user)}&senha=${encodeURIComponent(pass)}`;
+    const res = await fetch(url);
+    const data = await res.json();
 
-    try {
+    if(data.status === "ok"){
 
-        const res = await fetch(url, {
-            method: "GET",
-            redirect: "follow"
-        });
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("nivel", data.nivel);
 
-        const data = await res.json();
+        window.location.href = "painel.html";
 
-        if(data.status === "ok"){
-
-            localStorage.setItem("logado", "true");
-            localStorage.setItem("nivel", data.nivel);
-            localStorage.setItem("email", user);
-
-            window.location.href = "painel.html";
-
-        } else {
-            msg.innerText = "Usuário ou senha inválidos";
-        }
-
-    } catch (error) {
-        msg.innerText = "Erro ao conectar com servidor";
-        console.error(error);
+    } else {
+        alert("Login inválido");
     }
 }
 

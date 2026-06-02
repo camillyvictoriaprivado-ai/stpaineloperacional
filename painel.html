@@ -199,6 +199,29 @@ body::before {
 
 </head>
 
+<script>
+async function checkLogin() {
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        window.location.href = "index.html";
+        return;
+    }
+
+    const url = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec?type=validate&token=" + token;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.valid) {
+        window.location.href = "index.html";
+    }
+}
+
+checkLogin();
+</script>
+
 <body>
 
 <div class="header">
@@ -277,10 +300,6 @@ body::before {
 
 <script>
 
-if(localStorage.getItem("logado") !== "true"){
-    window.location.href = "index.html";
-}
-
 const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec";
 
 function go(page) {
@@ -335,4 +354,5 @@ carregar();
 </script>
 
 </body>
+
 </html>
