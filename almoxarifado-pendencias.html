@@ -111,7 +111,18 @@ td{
 .status-aguardando{ color:#ff7a00; font-weight:bold; }
 .status-tratada{ color:#2ecc71; font-weight:bold; }
 
+.btn-red{
+    background:#e74c3c;
+    color:#fff;
+    font-weight:600;
+}
+
+.btn-red:hover{
+    background:#c0392b;
+}
+
 </style>
+
 </head>
 
 <body>
@@ -130,6 +141,10 @@ td{
     <div class="kpi"><h3>Total</h3><p id="total">0</p></div>
     <div class="kpi"><h3>Aguardando</h3><p id="aguardando">0</p></div>
     <div class="kpi"><h3>Tratadas</h3><p id="tratadas">0</p></div>
+    <div class="kpi">
+    <h3>Duplicados</h3>
+    <p id="duplicados">0</p>
+</div>
 </div>
 
 <!-- CHARTS PRIMEIRO -->
@@ -155,7 +170,9 @@ td{
 
 <!-- 🔥 FILTROS AGORA AQUI EMBAIXO -->
 <div class="filter">
-    <input id="search" placeholder="Buscar material..." oninput="aplicarFiltros()">
+    <input id="searchMaterial" placeholder="Buscar material..." oninput="aplicarFiltros()">
+
+    <input id="searchID" placeholder="Buscar ID..." oninput="aplicarFiltros()">
 
     <select id="filtroCluster" onchange="aplicarFiltros()">
         <option value="">Todos clusters</option>
@@ -166,6 +183,10 @@ td{
         <option value="AGUARDANDO">Aguardando</option>
         <option value="TRATADA">Tratada</option>
     </select>
+
+    <button class="btn btn-red" onclick="toggleDuplicados()">
+    Filtrar Duplicados
+    </button>
 
     <button class="btn btn-yellow" onclick="limparFiltros()">
     Limpar Filtros
@@ -196,6 +217,8 @@ const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJ
 let dadosOriginais = [];
 let dadosFiltrados = [];
 
+let filtroDuplicadosAtivo = false;
+
 let chartStatus, chartCluster, chartMaterial;
 
 let filtroGraficoStatus = "";
@@ -219,16 +242,22 @@ function agrupar(lista,campo){
     return m;
 }
 
-async function load(){
+ async function load(){
 
-    const res = await fetch(API_URL+"?v="+Date.now());
+    const res = await fetch(API_URL + "?v=" + Date.now());
     const data = await res.json();
 
-    dadosOriginais = data.pendencias || [];
+    dadosOriginais = (data.pendencias || []).sort((a, b) =>
+        (get(a, "id") || "").localeCompare(
+            get(b, "id") || "",
+            undefined,
+            { numeric: true }
+        )
+    );
+
     dadosFiltrados = [...dadosOriginais];
 
     preencherFiltroCluster();
-
     renderTudo(dadosFiltrados);
 }
 
@@ -246,15 +275,18 @@ function preencherFiltroCluster(){
 
 function aplicarFiltros(){
 
-    const txt = document.getElementById("search").value.toLowerCase();
+    const txtMaterial = document.getElementById("searchMaterial").value.toLowerCase();
+    const txtID = document.getElementById("searchID").value.toLowerCase();
     const cluster = document.getElementById("filtroCluster").value;
     const status = document.getElementById("filtroStatus").value;
+
+    const idsDuplicados = getDuplicatedIds(dadosOriginais);
 
     dadosFiltrados = dadosOriginais.filter(i=>{
 
         const okText =
-    get(i,"material").toLowerCase().includes(txt) ||
-    get(i,"id").toLowerCase().includes(txt);
+            (txtMaterial === "" || get(i,"material").toLowerCase().includes(txtMaterial)) &&
+            (txtID === "" || get(i,"id").toLowerCase().includes(txtID));
 
         const okCluster =
             cluster ? i.cluster === cluster : true;
@@ -277,12 +309,18 @@ function aplicarFiltros(){
             ? norm(i.status).includes(filtroGraficoStatus)
             : true;
 
+        const okDuplicados =
+            filtroDuplicadosAtivo
+                ? idsDuplicados.has(get(i,"id"))
+                : true;
+
         return okText &&
                okCluster &&
                okStatus &&
                okGraficoCluster &&
                okGraficoMaterial &&
-               okGraficoStatus;
+               okGraficoStatus &&
+               okDuplicados;
     });
 
     renderTudo(dadosFiltrados);
@@ -299,9 +337,17 @@ function atualizarKPIs(lista){
     const ag = lista.filter(i=>norm(i.status).includes("AGUARDANDO")).length;
     const tr = lista.filter(i=>norm(i.status).includes("TRATADA")).length;
 
+    const dup = contarDuplicados(lista);
+
     document.getElementById("total").innerText = lista.length;
     document.getElementById("aguardando").innerText = ag;
     document.getElementById("tratadas").innerText = tr;
+    document.getElementById("duplicados").innerText = dup;
+
+    // ALERTA VISUAL
+    if(dup > 0){
+        console.warn(`⚠️ Existem ${dup} materiais duplicados`);
+    }
 }
 
 function charts(lista){
@@ -392,7 +438,7 @@ chartMaterial = new Chart(document.getElementById("materialChart"),{
             filtroGraficoMaterial =
                 Object.keys(material)[index];
 
-            document.getElementById("search").value =
+            document.getElementById("searchMaterial").value =
                 filtroGraficoMaterial;
 
             aplicarFiltros();
@@ -404,21 +450,40 @@ chartMaterial = new Chart(document.getElementById("materialChart"),{
 
 function render(lista){
 
+    const idsDuplicados = getDuplicatedIds(lista);
+
+    // 🔽 ORDENA POR ID (crescente)
+    const listaOrdenada = [...lista].sort((a, b) => {
+        return (get(a, "id") || "").localeCompare(
+            get(b, "id") || "",
+            undefined,
+            { numeric: true }
+        );
+    });
+
     const tbody=document.getElementById("tbody");
     tbody.innerHTML="";
 
-    lista.forEach(i=>{
-    tbody.innerHTML += `
-    <tr>
-        <td>${get(i,"id")}</td>
-        <td>${get(i,"material")}</td>
-        <td>${get(i,"operadora")}</td>
-        <td>${get(i,"cluster")}</td>
-        <td class="${norm(i.status).includes("TRATADA") ? "status-tratada" : "status-aguardando"}">
-            ${get(i,"status")}
-        </td>
-    </tr>`;
-});
+    listaOrdenada.forEach(i=>{
+        const idAtual = get(i,"id");
+        const isDup = idsDuplicados.has(idAtual);
+
+        tbody.innerHTML += `
+        <tr style="${isDup ? 'background:#ffe5e5;' : ''}">
+            <td 
+                style="cursor:pointer; ${isDup ? 'color:#d60000;font-weight:bold;' : ''}"
+                onclick="verMateriaisDoID('${idAtual}')"
+            >
+                ${idAtual}
+            </td>
+            <td>${get(i,"material")}</td>
+            <td>${get(i,"operadora")}</td>
+            <td>${get(i,"cluster")}</td>
+            <td class="${norm(i.status).includes("TRATADA") ? "status-tratada" : "status-aguardando"}">
+                ${get(i,"status")}
+            </td>
+        </tr>`;
+    });
 }
 
 function exportarExcel(){
@@ -440,7 +505,8 @@ load();
 
 function limparFiltros(){
 
-    document.getElementById("search").value = "";
+    document.getElementById("searchMaterial").value = "";
+    document.getElementById("searchID").value = "";
     document.getElementById("filtroCluster").value = "";
     document.getElementById("filtroStatus").value = "";
 
@@ -451,6 +517,84 @@ function limparFiltros(){
     dadosFiltrados = [...dadosOriginais];
 
     renderTudo(dadosFiltrados);
+}
+
+function contarDuplicados(lista){
+    const mapa = {};
+
+    lista.forEach(i=>{
+        const id = get(i,"id");
+        const material = get(i,"material");
+
+        const key = id + "||" + material;
+
+        mapa[key] = (mapa[key] || 0) + 1;
+    });
+
+    let duplicados = 0;
+
+    Object.values(mapa).forEach(qtd=>{
+        if(qtd > 1) duplicados++;
+    });
+
+    return duplicados;
+}
+
+function getDuplicatedIds(lista){
+    const mapa = {};
+
+    lista.forEach(i=>{
+        const id = get(i,"id");
+        const material = get(i,"material");
+
+        if(!id || !material) return;
+
+        const key = id + "||" + material;
+
+        mapa[key] = (mapa[key] || 0) + 1;
+    });
+
+    const duplicados = new Set();
+
+    Object.entries(mapa).forEach(([key, qtd])=>{
+        if(qtd > 1){
+            const [id] = key.split("||");
+            duplicados.add(id); // ainda marcamos por ID na tabela
+        }
+    });
+
+    return duplicados;
+}
+
+function toggleDuplicados(){
+    filtroDuplicadosAtivo = !filtroDuplicadosAtivo;
+
+    const btn = document.querySelector("[onclick='toggleDuplicados()']");
+
+    btn.innerText = filtroDuplicadosAtivo
+        ? "Mostrando Apenas Duplicados"
+        : "Filtrar Duplicados";
+
+    aplicarFiltros();
+}
+
+function verMateriaisDoID(idSelecionado){
+
+    const registros = dadosOriginais.filter(i => get(i,"id") === idSelecionado);
+
+    if(registros.length === 0){
+        alert("Nenhum registro encontrado para esse ID");
+        return;
+    }
+
+    const materiais = [...new Set(registros.map(i => get(i,"material")))];
+
+    alert(
+        `ID: ${idSelecionado}\n` +
+        `Quantidade de registros: ${registros.length}\n` +
+        `Materiais cadastrados (${materiais.length}):\n\n` +
+        materiais.join("\n")
+    );
 }
 
 </script>
