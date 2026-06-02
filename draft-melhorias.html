@@ -11,7 +11,6 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
 
 body{
@@ -76,7 +75,6 @@ h2, h5{
 .btn-warning:hover{
     background:#ffd633;
 }
-
 </style>
 
 </head>
@@ -151,25 +149,12 @@ h2, h5{
 
 <div class="col-lg-6">
 <div class="card chart-card">
-<h5>Responsável</h5>
-<div class="chart-container">
-<canvas id="respChart"></canvas>
-</div>
-</div>
-</div>
-
-<div class="col-lg-6">
-<div class="card chart-card">
 <h5>Status Campo</h5>
 <div class="chart-container">
 <canvas id="statusCampoChart"></canvas>
 </div>
 </div>
 </div>
-
-</div>
-
-<div class="row g-4 mb-4">
 
 <div class="col-lg-6">
 <div class="card chart-card">
@@ -179,6 +164,10 @@ h2, h5{
 </div>
 </div>
 </div>
+
+</div>
+
+<div class="row g-4 mb-4">
 
 <div class="col-lg-6">
 <div class="card chart-card">
@@ -199,7 +188,7 @@ h2, h5{
 </select>
 
 <button class="btn btn-dark" onclick="ordenarCusto()">Ordenar por Custo ↓</button>
-<button class="btn btn-warning" onclick="resetTabela()">Reset</button>
+<button class="btn btn-warning" onclick="resetTabela()">Limpar Filtros</button>
 
 </div>
 
@@ -240,6 +229,17 @@ h2, h5{
 let dadosBase = [];
 let dadosGlobais = [];
 let ordemCusto = false;
+
+let chartEmpresa;
+let chartArmario;
+let chartStatusCampo;
+let chartCluster;
+let chartCusto;
+
+let filtroEmpresa = "";
+let filtroArmario = "";
+let filtroStatusCampo = "";
+let filtroClusterGrafico = "";
 
 const API_URL =
 "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec?type=melhorias";
@@ -293,63 +293,242 @@ function montarCards(dados){
     document.getElementById("pendentes").innerText = pend;
 }
 
-function options(){
-    return {
-        responsive:true,
-        maintainAspectRatio:false,
-        plugins:{ legend:{ display:false } },
-        scales:{ x:{ ticks:{ maxRotation:45,minRotation:45 } } }
-    };
-}
-
 function montarGraficos(dados){
 
+        if(chartEmpresa) chartEmpresa.destroy();
+        if(chartArmario) chartArmario.destroy();
+        if(chartStatusCampo) chartStatusCampo.destroy();
+        if(chartCluster) chartCluster.destroy();
+        if(chartCusto) chartCusto.destroy();
+
+    // EMPRESA (PIE)
     const empresa = agrupar(dados,"empresa");
-    new Chart(document.getElementById("empresaChart"), {
-        type:"bar",
-        data:{ labels:Object.keys(empresa), datasets:[{ data:Object.values(empresa), backgroundColor:"#ff7a00" }] },
-        options:options()
-    });
+    chartEmpresa = new Chart(document.getElementById("empresaChart"),{
+    type:"pie",
+    data:{
+        labels:Object.keys(empresa),
+        datasets:[{
+            data:Object.values(empresa),
+            backgroundColor:[
+                "#ff7a00",
+                "#111",
+                "#ffcc00",
+                "#28a745",
+                "#dc3545",
+                "#6f42c1",
+                "#17a2b8"
+            ]
+        }]
+    },
+    options:{
+        responsive:true,
+        maintainAspectRatio:false,
 
-    const armario = agrupar(dados,"armario");
-    new Chart(document.getElementById("armarioChart"), {
-        type:"bar",
-        data:{ labels:Object.keys(armario), datasets:[{ data:Object.values(armario), backgroundColor:"#111" }] },
-        options:options()
-    });
+        onClick:(evt,elements)=>{
 
-    const resp = agrupar(dados,"responsavel");
-    new Chart(document.getElementById("respChart"), {
-        type:"bar",
-        data:{ labels:Object.keys(resp), datasets:[{ data:Object.values(resp), backgroundColor:"#555" }] },
-        options:options()
-    });
+            if(!elements.length) return;
 
-    const status = agrupar(dados,"status campo");
-    new Chart(document.getElementById("statusCampoChart"), {
-        type:"bar",
-        data:{ labels:Object.keys(status), datasets:[{ data:Object.values(status), backgroundColor:"#ff7a00" }] },
-        options:options()
-    });
+            const index = elements[0].index;
 
-    const cluster = agrupar(dados,"cluster");
-    new Chart(document.getElementById("clusterChart"), {
-        type:"bar",
-        data:{ labels:Object.keys(cluster), datasets:[{ data:Object.values(cluster), backgroundColor:"#111" }] },
-        options:options()
-    });
+            filtroEmpresa =
+                Object.keys(empresa)[index];
 
-    const custo = {};
-    dados.forEach(d=>{
-        const k = d.cluster || "Sem Info";
-        custo[k] = (custo[k] || 0) + parseCusto(d["custo total"]);
-    });
+            aplicarFiltrosGraficos();
+        },
 
-    new Chart(document.getElementById("custoChart"), {
+        plugins:{
+            legend:{ position:"bottom" }
+        }
+    }
+});
+
+    // ARMÁRIO (BAR)
+    // ARMÁRIO (BAR)
+const armario = agrupar(dados,"armario");
+
+chartArmario = new Chart(document.getElementById("armarioChart"), {
+    type:"bar",
+    data:{
+        labels:Object.keys(armario),
+        datasets:[{
+            data:Object.values(armario),
+            backgroundColor:"#111"
+        }]
+    },
+    options:{
+        responsive:true,
+        maintainAspectRatio:false,
+
+        onClick:(evt,elements)=>{
+
+            if(!elements.length) return;
+
+            const valor =
+                Object.keys(armario)[elements[0].index];
+
+            filtroArmario =
+                filtroArmario === valor ? "" : valor;
+
+            aplicarFiltrosGraficos();
+        },
+
+        plugins:{
+            legend:{display:false}
+        }
+    }
+});
+
+    // STATUS CAMPO (PIE)
+    // STATUS CAMPO (PIE)
+const status = agrupar(dados,"status campo");
+
+chartStatusCampo = new Chart(
+    document.getElementById("statusCampoChart"),
+    {
+        type:"pie",
+        data:{
+            labels:Object.keys(status),
+            datasets:[{
+                data:Object.values(status),
+                backgroundColor:[
+                    "#ff7a00",
+                    "#111",
+                    "#ffcc00",
+                    "#28a745",
+                    "#dc3545",
+                    "#6f42c1"
+                ]
+            }]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+
+            onClick:(evt,elements)=>{
+
+                if(!elements.length) return;
+
+                const valor =
+                    Object.keys(status)[elements[0].index];
+
+                filtroStatusCampo =
+                    filtroStatusCampo === valor ? "" : valor;
+
+                aplicarFiltrosGraficos();
+            },
+
+            plugins:{
+                legend:{position:"bottom"}
+            }
+        }
+    }
+);
+
+    // CLUSTER (BAR)
+    // CLUSTER (BAR)
+const cluster = agrupar(dados,"cluster");
+
+chartCluster = new Chart(
+    document.getElementById("clusterChart"),
+    {
         type:"bar",
-        data:{ labels:Object.keys(custo), datasets:[{ data:Object.values(custo), backgroundColor:"#ff7a00" }] },
-        options:options()
-    });
+        data:{
+            labels:Object.keys(cluster),
+            datasets:[{
+                data:Object.values(cluster),
+                backgroundColor:"#111"
+            }]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+
+            onClick:(evt,elements)=>{
+
+                if(!elements.length) return;
+
+                const valor =
+                    Object.keys(cluster)[elements[0].index];
+
+                filtroClusterGrafico =
+                    filtroClusterGrafico === valor ? "" : valor;
+
+                aplicarFiltrosGraficos();
+            },
+
+            plugins:{
+                legend:{display:false}
+            },
+
+            scales:{
+                x:{
+                    ticks:{
+                        maxRotation:45,
+                        minRotation:45
+                    }
+                }
+            }
+        }
+    }
+);
+
+    // CUSTO TOTAL (BAR)
+    // CUSTO TOTAL (BAR)
+
+const custo = {};
+
+dados.forEach(d=>{
+
+    const k = d.cluster || "Sem Info";
+
+    custo[k] =
+        (custo[k] || 0) +
+        parseCusto(d["custo total"]);
+});
+
+chartCusto = new Chart(
+    document.getElementById("custoChart"),
+    {
+        type:"bar",
+        data:{
+            labels:Object.keys(custo),
+            datasets:[{
+                data:Object.values(custo),
+                backgroundColor:"#ff7a00"
+            }]
+        },
+        options:{
+            responsive:true,
+            maintainAspectRatio:false,
+
+            onClick:(evt,elements)=>{
+
+                if(!elements.length) return;
+
+                const valor =
+                    Object.keys(custo)[elements[0].index];
+
+                filtroClusterGrafico =
+                    filtroClusterGrafico === valor ? "" : valor;
+
+                aplicarFiltrosGraficos();
+            },
+
+            plugins:{
+                legend:{display:false}
+            },
+
+            scales:{
+                x:{
+                    ticks:{
+                        maxRotation:45,
+                        minRotation:45
+                    }
+                }
+            }
+        }
+    }
+);
 }
 
 function montarTabela(dados){
@@ -384,12 +563,7 @@ function popularFiltroCluster(dados){
 }
 
 function filtrarTabela(){
-
-    const c = document.getElementById("filtroCluster").value;
-
-    const filtrado = c ? dadosBase.filter(d => (d.cluster||"Sem Info")===c) : dadosBase;
-
-    montarTabela(filtrado);
+    aplicarFiltrosGraficos();
 }
 
 function ordenarCusto(){
@@ -406,8 +580,15 @@ function ordenarCusto(){
 }
 
 function resetTabela(){
+
+    filtroEmpresa = "";
+    filtroArmario = "";
+    filtroStatusCampo = "";
+    filtroClusterGrafico = "";
+
     document.getElementById("filtroCluster").value = "";
-    montarTabela(dadosBase);
+
+    aplicarFiltrosGraficos();
 }
 
 function exportarExcel(){
@@ -418,6 +599,48 @@ function exportarExcel(){
 }
 
 carregar();
+
+function aplicarFiltrosGraficos(){
+
+    let dados = [...dadosBase];
+
+    if(filtroEmpresa){
+        dados = dados.filter(i =>
+            (i.empresa || "Sem Info") === filtroEmpresa
+        );
+    }
+
+    if(filtroArmario){
+        dados = dados.filter(i =>
+            (i.armario || "Sem Info") === filtroArmario
+        );
+    }
+
+    if(filtroStatusCampo){
+        dados = dados.filter(i =>
+            (i["status campo"] || "Sem Info") === filtroStatusCampo
+        );
+    }
+
+    if(filtroClusterGrafico){
+        dados = dados.filter(i =>
+            (i.cluster || "Sem Info") === filtroClusterGrafico
+        );
+    }
+
+    const clusterSelect =
+        document.getElementById("filtroCluster").value;
+
+    if(clusterSelect){
+        dados = dados.filter(i =>
+            (i.cluster || "Sem Info") === clusterSelect
+        );
+    }
+
+    montarCards(dados);
+    montarTabela(dados);
+    montarGraficos(dados);
+}
 
 </script>
 

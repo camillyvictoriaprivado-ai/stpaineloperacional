@@ -58,6 +58,20 @@ body{
     font-weight:bold;
 }
 
+.charts{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:15px;
+    padding:0 20px 20px;
+}
+
+.card-chart{
+    background:#fff;
+    padding:15px;
+    border-radius:12px;
+}
+
+/* FILTROS AGORA ABAIXO DOS GRÁFICOS */
 .filter{
     padding:0 20px 20px;
 }
@@ -70,6 +84,7 @@ input, select{
     margin-right:10px;
 }
 
+/* TABELA */
 .table{
     padding:20px;
 }
@@ -96,18 +111,6 @@ td{
 .status-aguardando{ color:#ff7a00; font-weight:bold; }
 .status-tratada{ color:#2ecc71; font-weight:bold; }
 
-.charts{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:15px;
-    padding:0 20px 20px;
-}
-
-.card-chart{
-    background:#fff;
-    padding:15px;
-    border-radius:12px;
-}
 </style>
 </head>
 
@@ -129,22 +132,7 @@ td{
     <div class="kpi"><h3>Tratadas</h3><p id="tratadas">0</p></div>
 </div>
 
-<!-- FILTROS -->
-<div class="filter">
-    <input id="search" placeholder="Buscar material..." oninput="aplicarFiltros()">
-
-    <select id="filtroCluster" onchange="aplicarFiltros()">
-        <option value="">Todos clusters</option>
-    </select>
-
-    <select id="filtroStatus" onchange="aplicarFiltros()">
-        <option value="">Todos status</option>
-        <option value="AGUARDANDO">Aguardando</option>
-        <option value="TRATADA">Tratada</option>
-    </select>
-</div>
-
-<!-- CHARTS -->
+<!-- CHARTS PRIMEIRO -->
 <div class="charts">
 
     <div class="card-chart">
@@ -162,6 +150,26 @@ td{
     <div class="card-chart" style="grid-column:1 / span 2;">
         <canvas id="materialChart"></canvas>
     </div>
+
+</div>
+
+<!-- 🔥 FILTROS AGORA AQUI EMBAIXO -->
+<div class="filter">
+    <input id="search" placeholder="Buscar material..." oninput="aplicarFiltros()">
+
+    <select id="filtroCluster" onchange="aplicarFiltros()">
+        <option value="">Todos clusters</option>
+    </select>
+
+    <select id="filtroStatus" onchange="aplicarFiltros()">
+        <option value="">Todos status</option>
+        <option value="AGUARDANDO">Aguardando</option>
+        <option value="TRATADA">Tratada</option>
+    </select>
+
+    <button class="btn btn-yellow" onclick="limparFiltros()">
+    Limpar Filtros
+</button>
 
 </div>
 
@@ -188,6 +196,10 @@ let dadosOriginais = [];
 let dadosFiltrados = [];
 
 let chartStatus, chartCluster, chartMaterial;
+
+let filtroGraficoStatus = "";
+let filtroGraficoCluster = "";
+let filtroGraficoMaterial = "";
 
 function norm(v){
     return (v||"").toString().toUpperCase();
@@ -242,18 +254,39 @@ function aplicarFiltros(){
         const okText =
             get(i,"material").toLowerCase().includes(txt);
 
-        const okCluster = cluster ? i.cluster === cluster : true;
+        const okCluster =
+            cluster ? i.cluster === cluster : true;
 
-        const okStatus = status ? norm(i.status).includes(status) : true;
+        const okStatus =
+            status ? norm(i.status).includes(status) : true;
 
-        return okText && okCluster && okStatus;
+        const okGraficoCluster =
+            filtroGraficoCluster
+            ? (i.cluster || "Sem Info") === filtroGraficoCluster
+            : true;
+
+        const okGraficoMaterial =
+            filtroGraficoMaterial
+            ? (i.material || "Sem Info") === filtroGraficoMaterial
+            : true;
+
+        const okGraficoStatus =
+            filtroGraficoStatus
+            ? norm(i.status).includes(filtroGraficoStatus)
+            : true;
+
+        return okText &&
+               okCluster &&
+               okStatus &&
+               okGraficoCluster &&
+               okGraficoMaterial &&
+               okGraficoStatus;
     });
 
     renderTudo(dadosFiltrados);
 }
 
 function renderTudo(lista){
-
     atualizarKPIs(lista);
     render(lista);
     charts(lista);
@@ -275,45 +308,96 @@ function charts(lista){
     const tr = lista.filter(i=>norm(i.status).includes("TRATADA")).length;
 
     if(chartStatus) chartStatus.destroy();
-    chartStatus = new Chart(document.getElementById("statusChart"),{
-        type:"doughnut",
-        data:{
-            labels:["Aguardando","Tratadas"],
-            datasets:[{data:[ag,tr],backgroundColor:["#ff7a00","#2ecc71"]}]
+
+chartStatus = new Chart(document.getElementById("statusChart"),{
+    type:"doughnut",
+    data:{
+        labels:["Aguardando","Tratadas"],
+        datasets:[{
+            data:[ag,tr],
+            backgroundColor:["#ff7a00","#2ecc71"]
+        }]
+    },
+    options:{
+        onClick:(event,elements)=>{
+
+            if(!elements.length) return;
+
+            const index = elements[0].index;
+
+            filtroGraficoStatus =
+                index === 0
+                ? "AGUARDANDO"
+                : "TRATADA";
+
+            aplicarFiltros();
         }
-    });
+    }
+});
 
     if(chartCluster) chartCluster.destroy();
-    const cluster = agrupar(lista,"cluster");
-    chartCluster = new Chart(document.getElementById("clusterChart"),{
-        type:"bar",
-        data:{
-            labels:Object.keys(cluster),
-            datasets:[{
-                label:"Clusters",
-                data:Object.values(cluster),
-                backgroundColor:"#111"
-            }]
+
+const cluster = agrupar(lista,"cluster");
+
+chartCluster = new Chart(document.getElementById("clusterChart"),{
+    type:"bar",
+    data:{
+        labels:Object.keys(cluster),
+        datasets:[{
+            label:"Clusters",
+            data:Object.values(cluster),
+            backgroundColor:"#111"
+        }]
+    },
+    options:{
+        onClick:(event,elements)=>{
+
+            if(!elements.length) return;
+
+            const index = elements[0].index;
+
+            filtroGraficoCluster =
+                Object.keys(cluster)[index];
+
+            aplicarFiltros();
         }
-    });
+    }
+});
 
     if(chartMaterial) chartMaterial.destroy();
-    const material = agrupar(lista,"material");
 
-    chartMaterial = new Chart(document.getElementById("materialChart"),{
-        type:"bar",
-        data:{
-            labels:Object.keys(material),
-            datasets:[{
-                label:"Material Ofensor",
-                data:Object.values(material),
-                backgroundColor:"#ff7a00"
-            }]
-        },
-        options:{
-            indexAxis:'y'
+const material = agrupar(lista,"material");
+
+chartMaterial = new Chart(document.getElementById("materialChart"),{
+    type:"bar",
+    data:{
+        labels:Object.keys(material),
+        datasets:[{
+            label:"Material Ofensor",
+            data:Object.values(material),
+            backgroundColor:"#ff7a00"
+        }]
+    },
+    options:{
+        indexAxis:'y',
+
+        onClick:(event,elements)=>{
+
+            if(!elements.length) return;
+
+            const index = elements[0].index;
+
+            filtroGraficoMaterial =
+                Object.keys(material)[index];
+
+            document.getElementById("search").value =
+                filtroGraficoMaterial;
+
+            aplicarFiltros();
         }
-    });
+    }
+});
+
 }
 
 function render(lista){
@@ -349,6 +433,21 @@ function exportarExcel(){
 }
 
 load();
+
+function limparFiltros(){
+
+    document.getElementById("search").value = "";
+    document.getElementById("filtroCluster").value = "";
+    document.getElementById("filtroStatus").value = "";
+
+    filtroGraficoStatus = "";
+    filtroGraficoCluster = "";
+    filtroGraficoMaterial = "";
+
+    dadosFiltrados = [...dadosOriginais];
+
+    renderTudo(dadosFiltrados);
+}
 
 </script>
 

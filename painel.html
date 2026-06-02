@@ -221,8 +221,8 @@ body::before {
         </div>
 
         <div class="box">
-            Meta do dia<br>
-            <span>0%</span>
+            Supervisor Cidade<br>
+            <span id="concluidos">0</span>
         </div>
 
     </div>
@@ -302,26 +302,31 @@ async function carregar() {
     const aguardandoFechamento =
     base.filter(i => (i.status || "").trim() === "Aguardando Fechamento").length;
 
-const supervisorCidade =
+    const supervisorCidade =
     base.filter(i => (i.status || "").trim() === "Supervisor Cidade").length;
 
-const concluido =
-    base.filter(i => (i.status || "").trim() === "Concluido").length;
-
-const cancelado =
-    base.filter(i => (i.status || "").trim() === "Cancelado").length;
-
-const eps =
+    const eps =
     base.filter(i => (i.status || "").trim() === "EPS").length;
 
-    document.getElementById("aguardandoFechamento").innerText = aguardandoFechamento;
-    document.getElementById("supervisorCidade").innerText = supervisorCidade;
+    document.getElementById("aguardandoFechamento").innerText =
+    aguardandoFechamento;
+
+    document.getElementById("eps").innerText =
+    eps;
+
+    document.getElementById("concluidos").innerText =
+    supervisorCidade;
 
     const total = base.length;
-    const percent = total ? Math.round((concluido / total) * 100) : 0;
+    const percent = total
+    ? Math.round((supervisorCidade / total) * 100)
+    : 0;
 
-    document.getElementById("percent").innerText = percent + "%";
-    document.getElementById("bar").style.width = percent + "%";
+    document.getElementById("percent").innerText =
+    "Supervisor Cidade: " + percent + "%";
+
+    document.getElementById("bar").style.width =
+    percent + "%";
 }
 
 /* 🔥 ISSO AQUI É O QUE FALTAVA */

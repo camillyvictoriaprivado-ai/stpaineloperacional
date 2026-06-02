@@ -120,17 +120,24 @@ h2{
 <!-- GRÁFICOS -->
 <div class="row g-4 mb-4">
 
-<div class="col-lg-6">
+<div class="col-lg-4">
 <div class="card chart-card">
 <h5>Entregues x Pendentes</h5>
 <canvas id="entregaChart"></canvas>
 </div>
 </div>
 
-<div class="col-lg-6">
+<div class="col-lg-4">
 <div class="card chart-card">
 <h5>Status AutoCAD</h5>
 <canvas id="autocadChart"></canvas>
+</div>
+</div>
+
+<div class="col-lg-4">
+<div class="card chart-card">
+<h5>Responsáveis</h5>
+<canvas id="responsavelChart"></canvas>
 </div>
 </div>
 
@@ -156,7 +163,7 @@ h2{
 </div>
 
 <div class="col-md-4">
-<button class="btn btn-dark w-100" onclick="limparFiltros()">Limpar filtros</button>
+<button class="btn btn-warning w-100" onclick="limparFiltros()">Limpar Filtros</button>
 </div>
 
 </div>
@@ -200,6 +207,14 @@ h2{
 let projetosGlobais = [];
 let projetosFiltrados = [];
 
+let chartEntrega;
+let chartAutocad;
+let chartResponsavel;
+
+let filtroEntrega = "";
+let filtroAutocad = "";
+let filtroResponsavelGrafico = "";
+
 const API_URL =
 "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec";
 
@@ -210,6 +225,67 @@ function agrupar(lista, campo){
         mapa[chave] = (mapa[chave] || 0) + 1;
     });
     return mapa;
+}
+
+function aplicarFiltros(){
+
+    let dados = [...projetosGlobais];
+
+    if(filtroEntrega){
+
+        if(filtroEntrega === "Entregues"){
+            dados = dados.filter(p =>
+                (p.entregue || "").toUpperCase() === "OK"
+            );
+        }
+
+        if(filtroEntrega === "Pendentes"){
+            dados = dados.filter(p =>
+                (p.entregue || "").toUpperCase() !== "OK"
+            );
+        }
+    }
+
+    if(filtroAutocad){
+        dados = dados.filter(p =>
+            (p["projeto autocad"] || "Sem Informação") === filtroAutocad
+        );
+    }
+
+    if(filtroResponsavelGrafico){
+        dados = dados.filter(p =>
+            (p.responsavel || "Sem Informação") === filtroResponsavelGrafico
+        );
+    }
+
+    const respSelect =
+        document.getElementById("filtroResponsavel").value;
+
+    if(respSelect){
+        dados = dados.filter(p =>
+            p.responsavel === respSelect
+        );
+    }
+
+    const ordem =
+        document.getElementById("ordemPrevisao").value;
+
+    if(ordem){
+
+        dados.sort((a,b)=>{
+
+            return ordem === "asc"
+
+                ? new Date(a.previsao) - new Date(b.previsao)
+
+                : new Date(b.previsao) - new Date(a.previsao);
+        });
+    }
+
+    projetosFiltrados = dados;
+
+    montarTabela(dados);
+    montarGraficos(dados);
 }
 
 async function carregar(){
@@ -243,26 +319,53 @@ function preencherFiltroResponsavel(dados){
 
 function montarGraficos(projetos){
 
+    if(chartEntrega) chartEntrega.destroy();
+    if(chartAutocad) chartAutocad.destroy();
+    if(chartResponsavel) chartResponsavel.destroy();
+
     const entregues = projetos.filter(p => (p.entregue||"").toUpperCase()=="OK").length;
     const pendentes = projetos.length - entregues;
 
     document.getElementById("entregues").innerText = entregues;
     document.getElementById("pendentes").innerText = pendentes;
 
-    new Chart(document.getElementById("entregaChart"), {
-        type:"doughnut",
+    // ENTREGUES x PENDENTES
+    chartEntrega = new Chart(
+    document.getElementById("entregaChart"),
+{
+        type:"bar",
         data:{
             labels:["Entregues","Pendentes"],
             datasets:[{
                 data:[entregues, pendentes],
                 backgroundColor:["#ff7a00","#111"]
             }]
+        },
+        options:{
+            responsive:true,
+            plugins:{ legend:{ display:false } },
+            scales:{ y:{ beginAtZero:true } },
+            onClick:(evt,elements)=>{
+
+    if(!elements.length) return;
+
+    const valor =
+        ["Entregues","Pendentes"][elements[0].index];
+
+    filtroEntrega =
+        filtroEntrega === valor ? "" : valor;
+
+    aplicarFiltros();
+},
         }
     });
 
+    // AUTOCAD
     const autocad = agrupar(projetos,"projeto autocad");
 
-    new Chart(document.getElementById("autocadChart"), {
+    chartAutocad = new Chart(
+    document.getElementById("autocadChart"),
+{
         type:"bar",
         data:{
             labels:Object.keys(autocad),
@@ -271,34 +374,75 @@ function montarGraficos(projetos){
                 data:Object.values(autocad),
                 backgroundColor:"#ff7a00"
             }]
+        },
+        options:{
+            responsive:true,
+            plugins:{ legend:{ display:false } },
+            scales:{ y:{ beginAtZero:true } },
+            onClick:(evt,elements)=>{
+
+    if(!elements.length) return;
+
+    const valor =
+        Object.keys(autocad)[elements[0].index];
+
+    filtroAutocad =
+        filtroAutocad === valor ? "" : valor;
+
+    aplicarFiltros();
+},
+        }
+    });
+
+    // RESPONSÁVEIS (NOVO)
+    const responsavel = agrupar(projetos,"responsavel");
+
+    chartResponsavel = new Chart(
+    document.getElementById("responsavelChart"),
+{
+        type:"bar",
+        data:{
+            labels:Object.keys(responsavel),
+            datasets:[{
+                label:"Projetos",
+                data:Object.values(responsavel),
+                backgroundColor:"#111"
+            }]
+        },
+        options:{
+            responsive:true,
+            plugins:{ legend:{ display:false } },
+            scales:{ y:{ beginAtZero:true } },
+            onClick:(evt,elements)=>{
+
+    if(!elements.length) return;
+
+    const valor =
+        Object.keys(responsavel)[elements[0].index];
+
+    filtroResponsavelGrafico =
+        filtroResponsavelGrafico === valor ? "" : valor;
+
+    aplicarFiltros();
+},
         }
     });
 }
 
 function filtrarTabela(){
-
-    const resp = document.getElementById("filtroResponsavel").value;
-    const ordem = document.getElementById("ordemPrevisao").value;
-
-    projetosFiltrados = projetosGlobais.filter(p=>{
-        return !resp || p.responsavel == resp;
-    });
-
-    if(ordem){
-        projetosFiltrados.sort((a,b)=>{
-            return ordem=="asc"
-            ? new Date(a.previsao) - new Date(b.previsao)
-            : new Date(b.previsao) - new Date(a.previsao);
-        });
-    }
-
-    montarTabela(projetosFiltrados);
+    aplicarFiltros();
 }
 
 function limparFiltros(){
-    document.getElementById("filtroResponsavel").value="";
-    document.getElementById("ordemPrevisao").value="";
-    filtrarTabela();
+
+    filtroEntrega = "";
+    filtroAutocad = "";
+    filtroResponsavelGrafico = "";
+
+    document.getElementById("filtroResponsavel").value = "";
+    document.getElementById("ordemPrevisao").value = "";
+
+    aplicarFiltros();
 }
 
 function montarTabela(projetos){

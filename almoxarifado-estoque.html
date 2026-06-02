@@ -18,7 +18,6 @@ body{
     color:#111;
 }
 
-/* HEADER */
 .header{
     background:#fff;
     padding:20px;
@@ -28,49 +27,17 @@ body{
     border-bottom:2px solid #ff7a00;
 }
 
-.header h1{
-    margin:0;
-    font-size:20px;
-}
-
-/* BOTÕES PADRÃO */
-.header div{
-    display:flex;
-    gap:10px;
-}
-
-/* BOTÃO BASE */
 .btn{
     border:none;
     padding:10px 14px;
     border-radius:6px;
     cursor:pointer;
     font-family:'Orbitron', sans-serif;
-    transition:0.2s;
 }
 
-/* PRETO - VOLTAR */
-.btn-dark-custom{
-    background:#111;
-    color:#fff;
-}
+.btn-dark-custom{ background:#111; color:#fff; }
+.btn-yellow{ background:#ffcc00; color:#111; font-weight:600; }
 
-.btn-dark-custom:hover{
-    background:#333;
-}
-
-/* AMARELO - EXPORTAR */
-.btn-yellow{
-    background:#ffcc00;
-    color:#111;
-    font-weight:600;
-}
-
-.btn-yellow:hover{
-    background:#ffd633;
-}
-
-/* KPIs */
 .kpis{
     display:grid;
     grid-template-columns:repeat(4,1fr);
@@ -80,14 +47,8 @@ body{
 
 .kpi{
     background:#fff;
-    border:1px solid rgba(0,0,0,0.08);
     border-radius:12px;
     padding:18px;
-}
-
-.kpi h3{
-    margin:0;
-    font-size:14px;
 }
 
 .kpi p{
@@ -97,27 +58,48 @@ body{
     font-weight:bold;
 }
 
-/* FILTER */
-.filter{
+/* FILTERS */
+.filters{
+    display:flex;
+    gap:10px;
     padding:0 20px 20px;
 }
 
-input{
+input, select{
     padding:10px;
-    width:100%;
-    max-width:300px;
     border:1px solid #ddd;
     border-radius:8px;
-    font-family:'Orbitron', sans-serif;
+    font-family:'Orbitron';
 }
 
-/* CHART */
-.chart{
-    padding:20px;
+/* CHARTS */
+.charts{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:15px;
+    padding:0 20px 20px;
+}
+
+.chart-wide{
+    grid-column:1 / span 2;
+    min-height:750px;
+}
+
+.chart-wide canvas{
+    height:700px !important;
+}
+
+.card{
     background:#fff;
-    margin:20px;
     border-radius:12px;
-    border:1px solid rgba(0,0,0,0.08);
+    padding:15px;
+}
+
+.card h4{
+    margin:0 0 15px;
+    color:#111;
+    font-size:14px;
+    font-weight:600;
 }
 
 /* TABLE */
@@ -137,7 +119,6 @@ th{
     background:#111;
     color:#fff;
     padding:12px;
-    text-align:left;
 }
 
 td{
@@ -145,37 +126,10 @@ td{
     border-bottom:1px solid #eee;
 }
 
-.low{
-    color:#ff3b30;
-    font-weight:bold;
-}
-
-.ok{
-    color:#2ecc71;
-    font-weight:bold;
-}
-
-/* BACK BUTTON */
-.back{
-    padding: 15px 20px;
-}
-
-.back button{
-    background: transparent;
-    border: 1px solid #ff7a00;
-    color: #ff7a00;
-    padding: 10px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.back button:hover{
-    background:#ff7a00;
-    color:#fff;
-}
+.low{ color:#ff3b30; font-weight:bold; }
+.ok{ color:#2ecc71; font-weight:bold; }
 
 </style>
-
 </head>
 
 <body>
@@ -185,49 +139,62 @@ td{
     <h1>CONTROLE DE ALMOXARIFADO</h1>
 
     <div>
-        <button class="btn btn-dark-custom" onclick="window.location.href='painel.html'">
-            ← VOLTAR AO PAINEL
-        </button>
-
-        <button class="btn btn-yellow" onclick="exportarExcel()">
-            EXPORTAR EXCEL
-        </button>
+        <button class="btn btn-dark-custom" onclick="window.location.href='painel.html'">← VOLTAR</button>
+        <button class="btn btn-yellow" onclick="exportarExcel()">EXPORTAR</button>
     </div>
 </div>
 
 <!-- KPIs -->
 <div class="kpis">
+    <div class="kpi"><h3>Total</h3><p id="total">0</p></div>
+    <div class="kpi"><h3>Baixo</h3><p id="baixo">0</p></div>
+    <div class="kpi"><h3>Saldo</h3><p id="saldo">0</p></div>
+    <div class="kpi"><h3>Clusters</h3><p id="clusters">0</p></div>
+</div>
 
-    <div class="kpi">
-        <h3>Total Itens</h3>
-        <p id="total">0</p>
+<!-- CHARTS -->
+<div class="charts">
+
+    <div class="card">
+        <h4>Pendências por Cluster</h4>
+        <canvas id="chartCluster"></canvas>
     </div>
 
-    <div class="kpi">
-        <h3>Estoque Baixo</h3>
-        <p id="baixo">0</p>
+    <div class="card">
+        <h4>Estoque por Cluster</h4>
+        <canvas id="chartStatus"></canvas>
     </div>
 
-    <div class="kpi">
-        <h3>Saldo Total</h3>
-        <p id="saldo">0</p>
+    <div class="card chart-wide">
+        <h4>Material Ofensor (Quantidade de IDs)</h4>
+        <canvas id="chartMaterial"></canvas>
     </div>
 
-    <div class="kpi">
-        <h3>Clusters</h3>
-        <p id="clusters">0</p>
     </div>
+
+<!-- FILTERS -->
+<div class="filters">
+    <input id="search" placeholder="Buscar material..." oninput="aplicar()">
+
+    <select id="fCluster" onchange="aplicar()">
+        <option value="">Todos clusters</option>
+    </select>
+
+    <select id="fStatus" onchange="aplicar()">
+        <option value="">Status</option>
+        <option value="BAIXO">Baixo</option>
+        <option value="OK">OK</option>
+    </select>
+
+    <button class="btn btn-yellow" onclick="limparFiltro()">
+        Limpar Filtros
+    </button>
 
 </div>
 
-<!-- FILTER -->
-<div class="filter">
-    <input id="search" onkeyup="filter()" placeholder="Buscar material...">
-</div>
+<!-- TABLE -->
+<div class="table">
 
-<!-- CHART -->
-<div class="chart">
-    <canvas id="chart"></canvas>
 </div>
 
 <!-- TABLE -->
@@ -246,134 +213,327 @@ td{
 </table>
 </div>
 
+
 <script>
 
 const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec";
 
-let chart;
-let dadosGlobais = [];
+let dados = [];
+let filtrados = [];
 
-function get(obj, key){
-    return (obj[key] || obj[key.toLowerCase()] || "").toString();
-}
+let c1,c2,c3;
+
+let filtroClusterGrafico = "";
+let filtroMaterialGrafico = "";
+
+function num(v){ return Number(v||0); }
+
+function status(s){ return num(s) < 10 ? "BAIXO" : "OK"; }
 
 async function load(){
 
     const res = await fetch(API_URL);
     const data = await res.json();
 
-    const almox = data.almoxarifado || [];
-    dadosGlobais = almox;
+    dados = data.almoxarifado || [];
+    filtrados = [...dados];
 
-    document.getElementById("total").innerText = almox.length;
+    preencherClusters();
+    render();
+    kpis();
+    charts();
+}
 
-    const baixo = almox.filter(i =>
-        Number(get(i,"saldo")) < 10
-    ).length;
-    document.getElementById("baixo").innerText = baixo;
+function preencherClusters(){
 
-    const saldo = almox.reduce((a,b)=>
-        a + Number(get(b,"saldo") || 0)
-    ,0);
+    const c = [...new Set(dados.map(i=>i.cluster))];
+    const sel = document.getElementById("fCluster");
 
-    document.getElementById("saldo").innerText = saldo;
-
-    const clusters = [...new Set(almox.map(i =>
-        get(i,"cluster")
-    ))];
-
-    document.getElementById("clusters").innerText = clusters.length;
-
-    renderTable(almox);
-
-    const map = {};
-
-    almox.forEach(i=>{
-        const c = get(i,"cluster");
-        const s = Number(get(i,"saldo") || 0);
-
-        map[c] = (map[c] || 0) + s;
-    });
-
-    if(chart) chart.destroy();
-
-    chart = new Chart(document.getElementById("chart"),{
-        type:"bar",
-        data:{
-            labels:Object.keys(map),
-            datasets:[{
-                data:Object.values(map),
-                backgroundColor:"#ff7a00"
-            }]
-        },
-        options:{
-            plugins:{ legend:{ display:false } }
-        }
+    c.forEach(x=>{
+        const o=document.createElement("option");
+        o.value=x;
+        o.innerText=x;
+        sel.appendChild(o);
     });
 }
 
-function renderTable(data){
+function aplicar(){
 
-    const tbody = document.getElementById("tbody");
-    tbody.innerHTML = "";
+    const t = document.getElementById("search").value.toLowerCase();
+    const cl = document.getElementById("fCluster").value;
+    const st = document.getElementById("fStatus").value;
 
-    data.forEach(i=>{
+    filtrados = dados.filter(i=>{
 
-        const material = get(i,"material");
-        const cluster = get(i,"cluster");
-        const deposito = get(i,"deposito");
-        const saldo = Number(get(i,"saldo") || 0);
+        const okT = (i.material||"").toLowerCase().includes(t);
 
-        tbody.innerHTML += `
+        const okC = cl
+            ? i.cluster === cl
+            : true;
+
+        const okS = st
+            ? status(i.saldo) === st
+            : true;
+
+        const okGraficoCluster =
+            filtroClusterGrafico
+            ? (i.cluster || "Sem Info") === filtroClusterGrafico
+            : true;
+
+        const okGraficoMaterial =
+            filtroMaterialGrafico
+            ? (i.material || "Sem Info") === filtroMaterialGrafico
+            : true;
+
+        return okT &&
+               okC &&
+               okS &&
+               okGraficoCluster &&
+               okGraficoMaterial;
+    });
+
+    render();
+    kpis();
+    charts();
+}
+
+function kpis(){
+
+    document.getElementById("total").innerText = filtrados.length;
+
+    const baixo = filtrados.filter(i=>num(i.saldo)<10).length;
+    document.getElementById("baixo").innerText = baixo;
+
+    const saldo = filtrados.reduce((a,b)=>a+num(b.saldo),0);
+    document.getElementById("saldo").innerText = saldo;
+
+    document.getElementById("clusters").innerText =
+        new Set(filtrados.map(i=>i.cluster)).size;
+}
+
+function charts(){
+
+    /* =======================
+       1. PIZZA - CLUSTER
+    ======================= */
+    const cluster = {};
+    filtrados.forEach(i=>{
+        const c = i.cluster || "Sem Info";
+        cluster[c] = (cluster[c] || 0) + 1;
+    });
+
+    if(c1) c1.destroy();
+    c1 = new Chart(document.getElementById("chartCluster"),{
+    type:"pie",
+    data:{
+        labels:Object.keys(cluster),
+        datasets:[{
+            data:Object.values(cluster),
+            backgroundColor:[
+                "#ff7a00",
+                "#111",
+                "#2ecc71",
+                "#ff3b30",
+                "#3498db"
+            ]
+        }]
+    },
+    options:{
+        onClick:(event,elements)=>{
+
+            if(!elements.length) return;
+
+            const index = elements[0].index;
+
+            filtroClusterGrafico =
+                Object.keys(cluster)[index];
+
+            aplicar();
+        }
+    }
+});
+
+    /* =======================
+       2. COLUNA - ESTOQUE
+    ======================= */
+    const estoque = {};
+    filtrados.forEach(i=>{
+        const c = i.cluster || "Sem Info";
+        estoque[c] = (estoque[c] || 0) + num(i.saldo);
+    });
+
+    if(c2) c2.destroy();
+
+    c2 = new Chart(document.getElementById("chartStatus"),{
+    type:"bar",
+    data:{
+        labels:Object.keys(estoque),
+        datasets:[{
+            label:"Estoque",
+            data:Object.values(estoque),
+            backgroundColor:"#ff7a00"
+        }]
+    },
+    options:{
+        onClick:(event,elements)=>{
+
+            if(!elements.length) return;
+
+            const index = elements[0].index;
+
+            filtroClusterGrafico =
+                Object.keys(estoque)[index];
+
+            aplicar();
+        }
+    }
+});
+
+    /* =======================
+       3. LINHA - MATERIAL OFENSOR
+    ======================= */
+    const material = {};
+    filtrados.forEach(i=>{
+        const m = i.material || "Sem Info";
+        material[m] = (material[m] || 0) + 1;
+    });
+
+    const top = Object.entries(material)
+        .sort((a,b)=>b[1]-a[1])
+        .slice(0,10);
+
+    if(c3) c3.destroy();
+
+c3 = new Chart(document.getElementById("chartMaterial"),{
+    type:"bar",
+    data:{
+        labels:top.map(i=>i[0]),
+        datasets:[{
+            label:"Qtd de IDs",
+            data:top.map(i=>i[1]),
+            backgroundColor:"#ff7a00",
+            borderColor:"#d96600",
+            borderWidth:1
+        }]
+    },
+    options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        indexAxis:'y',
+
+        onClick:(event,elements)=>{
+
+            if(!elements.length) return;
+
+            const index = elements[0].index;
+            const materialSelecionado = top[index][0];
+
+            document.getElementById("search").value = materialSelecionado;
+
+             filtroMaterialGrafico = materialSelecionado;
+             aplicar();
+        },
+
+        plugins:{
+            legend:{
+                labels:{
+                    color:"#111",
+                    font:{
+                        family:"Orbitron",
+                        size:12,
+                        weight:"600"
+                    }
+                }
+            },
+            tooltip:{
+                callbacks:{
+                    afterLabel:function(context){
+                        return "Clique para filtrar";
+                    }
+                }
+            }
+        },
+
+        scales:{
+            x:{
+                beginAtZero:true,
+                ticks:{
+                    color:"#111",
+                    font:{
+                        family:"Orbitron",
+                        size:12,
+                        weight:"600"
+                    }
+                }
+            },
+            y:{
+                ticks:{
+                    color:"#111",
+                    font:{
+                        family:"Orbitron",
+                        size:12,
+                        weight:"600"
+                    }
+                }
+            }
+        }
+    }
+});
+
+}
+
+function render(){
+
+    const tb=document.getElementById("tbody");
+    tb.innerHTML="";
+
+    filtrados.forEach(i=>{
+
+        const s = status(i.saldo);
+
+        tb.innerHTML+=`
         <tr>
-            <td>${material}</td>
-            <td>${cluster}</td>
-            <td>${deposito}</td>
-            <td>${saldo}</td>
-            <td class="${saldo < 10 ? 'low' : 'ok'}">
-                ${saldo < 10 ? 'Baixo' : 'OK'}
-            </td>
+            <td>${i.material||""}</td>
+            <td>${i.cluster||""}</td>
+            <td>${i.deposito||""}</td>
+            <td>${num(i.saldo)}</td>
+            <td class="${s==="BAIXO"?"low":"ok"}">${s}</td>
         </tr>`;
     });
 }
 
-function filter(){
-
-    const v = document.getElementById("search").value.toLowerCase();
-
-    const filtrado = dadosGlobais.filter(i =>
-        get(i,"material").toLowerCase().includes(v) ||
-        get(i,"cluster").toLowerCase().includes(v) ||
-        get(i,"codigo").toLowerCase().includes(v)
-    );
-
-    renderTable(filtrado);
-}
-
 function exportarExcel(){
 
-    if(!dadosGlobais.length){
-        alert("Nenhum dado para exportar");
-        return;
-    }
+    const ws=XLSX.utils.json_to_sheet(filtrados.map(i=>({
+        Material:i.material,
+        Cluster:i.cluster,
+        Deposito:i.deposito,
+        Saldo:num(i.saldo),
+        Status:status(i.saldo)
+    })));
 
-    const dados = dadosGlobais.map(i=>({
-        Material: get(i,"material"),
-        Cluster: get(i,"cluster"),
-        Deposito: get(i,"deposito"),
-        Saldo: Number(get(i,"saldo") || 0),
-        Status: Number(get(i,"saldo") || 0) < 10 ? "Baixo" : "OK"
-    }));
-
-    const ws = XLSX.utils.json_to_sheet(dados);
-    const wb = XLSX.utils.book_new();
-
-    XLSX.utils.book_append_sheet(wb, ws, "Almoxarifado");
-
-    XLSX.writeFile(wb, "almoxarifado.xlsx");
+    const wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,"almox");
+    XLSX.writeFile(wb,"almoxarifado.xlsx");
 }
 
 load();
+
+function limparFiltro(){
+
+    document.getElementById("search").value = "";
+    document.getElementById("fCluster").value = "";
+    document.getElementById("fStatus").value = "";
+
+    filtroClusterGrafico = "";
+    filtroMaterialGrafico = "";
+
+    filtrados = [...dados];
+
+    render();
+    kpis();
+    charts();
+}
 
 </script>
 
