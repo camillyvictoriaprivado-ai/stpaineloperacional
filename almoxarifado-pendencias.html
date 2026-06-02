@@ -120,7 +120,7 @@ td{
     <h1>CONTROLE DE PENDÊNCIAS</h1>
 
     <div>
-        <button class="btn btn-dark-custom" onclick="window.location.href='painel.html'">← VOLTAR</button>
+        <button class="btn btn-dark-custom" onclick="window.location.href='painel.html'">← Voltar ao Painel</button>
         <button class="btn btn-yellow" onclick="exportarExcel()">EXPORTAR EXCEL</button>
     </div>
 </div>
@@ -177,7 +177,8 @@ td{
 <div class="table">
 <table>
 <thead>
-<tr>
+    <tr>
+    <th>ID</th>
     <th>Material</th>
     <th>Operadora</th>
     <th>Cluster</th>
@@ -252,7 +253,8 @@ function aplicarFiltros(){
     dadosFiltrados = dadosOriginais.filter(i=>{
 
         const okText =
-            get(i,"material").toLowerCase().includes(txt);
+    get(i,"material").toLowerCase().includes(txt) ||
+    get(i,"id").toLowerCase().includes(txt);
 
         const okCluster =
             cluster ? i.cluster === cluster : true;
@@ -406,26 +408,28 @@ function render(lista){
     tbody.innerHTML="";
 
     lista.forEach(i=>{
-        tbody.innerHTML+=`
-        <tr>
-            <td>${get(i,"material")}</td>
-            <td>${get(i,"operadora")}</td>
-            <td>${get(i,"cluster")}</td>
-            <td class="${norm(i.status).includes("TRATADA")?"status-tratada":"status-aguardando"}">
-                ${get(i,"status")}
-            </td>
-        </tr>`;
-    });
+    tbody.innerHTML += `
+    <tr>
+        <td>${get(i,"id")}</td>
+        <td>${get(i,"material")}</td>
+        <td>${get(i,"operadora")}</td>
+        <td>${get(i,"cluster")}</td>
+        <td class="${norm(i.status).includes("TRATADA") ? "status-tratada" : "status-aguardando"}">
+            ${get(i,"status")}
+        </td>
+    </tr>`;
+});
 }
 
 function exportarExcel(){
 
     const ws=XLSX.utils.json_to_sheet(dadosFiltrados.map(i=>({
-        Material:get(i,"material"),
-        Operadora:get(i,"operadora"),
-        Cluster:get(i,"cluster"),
-        Status:get(i,"status")
-    })));
+    ID:get(i,"id"),
+    Material:get(i,"material"),
+    Operadora:get(i,"operadora"),
+    Cluster:get(i,"cluster"),
+    Status:get(i,"status")
+})));
 
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,"pendencias");
