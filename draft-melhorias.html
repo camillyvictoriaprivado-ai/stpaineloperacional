@@ -93,31 +93,42 @@ h2, h5{
 <!-- KPI -->
 <div class="row g-3 mb-4">
 
-<div class="col-md-4">
-<div class="card card-kpi">
-<div class="card-body text-center">
-<div>Total</div>
-<div id="total" class="kpi-value">0</div>
-</div>
-</div>
-</div>
+    <div class="col-md-3">
+        <div class="card card-kpi">
+            <div class="card-body text-center">
+                <div>Total</div>
+                <div id="total" class="kpi-value">0</div>
+            </div>
+        </div>
+    </div>
 
-<div class="col-md-4">
-<div class="card card-kpi">
-<div class="card-body text-center">
-<div>Executadas</div>
-<div id="executadas" class="kpi-value">0</div>
-</div>
-</div>
-</div>
+    <div class="col-md-3">
+        <div class="card card-kpi">
+            <div class="card-body text-center">
+                <div>Executadas</div>
+                <div id="executadas" class="kpi-value">0</div>
+            </div>
+        </div>
+    </div>
 
-<div class="col-md-4">
-<div class="card card-kpi">
-<div class="card-body text-center">
-<div>Pendentes</div>
-<div id="pendentes" class="kpi-value">0</div>
-</div>
-</div>
+    <div class="col-md-3">
+        <div class="card card-kpi">
+            <div class="card-body text-center">
+                <div>Pendentes</div>
+                <div id="pendentes" class="kpi-value">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card card-kpi">
+            <div class="card-body text-center">
+                <div>Campo</div>
+                <div id="campo" class="kpi-value">0</div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 </div>
@@ -281,16 +292,33 @@ async function carregar(){
 
 function montarCards(dados){
 
-    let exec = 0, pend = 0;
+    let exec = 0;
+    let pend = 0;
+    let campo = 0;
 
-    dados.forEach(d=>{
-        const s = String(d["status campo"]||"").toUpperCase();
-        if(s.includes("EXEC")) exec++;
-        else pend++;
+    dados.forEach(d => {
+
+        const status =
+            String(d["status campo"] || "")
+            .trim()
+            .toUpperCase();
+
+        if(status.includes("EXEC")){
+            exec++;
+        } else {
+            pend++;
+        }
+
+        if(status === "CAMPO"){
+            campo++;
+        }
+
     });
 
+    document.getElementById("total").innerText = dados.length;
     document.getElementById("executadas").innerText = exec;
     document.getElementById("pendentes").innerText = pend;
+    document.getElementById("campo").innerText = campo;
 }
 
 function montarGraficos(dados){
