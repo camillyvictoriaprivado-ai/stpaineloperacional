@@ -274,6 +274,8 @@ let c1,c2,c3,c4;
 
 let filtroClusterGrafico = "";
 let filtroMaterialGrafico = "";
+let filtroCentroGrafico = "";
+
 
 function num(v){ return Number(v||0); }
 function status(s){ return num(s) < 10 ? "BAIXO" : "OK"; }
@@ -417,13 +419,16 @@ function charts(){
         },
         options:{
             onClick:(event,elements)=>{
-                if(!elements.length) return;
+            if(!elements.length) return;
 
-                const index = elements[0].index;
-                filtroClusterGrafico = Object.keys(cluster)[index];
+             const index = elements[0].index;
+             const valor = Object.keys(cluster)[index];
 
-                aplicar();
-            }
+             filtroClusterGrafico =
+             filtroClusterGrafico === valor ? "" : valor;
+
+    aplicar();
+}
         }
     });
 
@@ -449,12 +454,15 @@ function charts(){
         },
         options:{
             onClick:(event,elements)=>{
-                if(!elements.length) return;
+            if(!elements.length) return;
 
-                const index = elements[0].index;
-                filtroClusterGrafico = Object.keys(estoque)[index];
+            const index = elements[0].index;
+            const valor = Object.keys(estoque)[index];
 
-                aplicar();
+            filtroClusterGrafico =
+            filtroClusterGrafico === valor ? "" : valor;
+
+             aplicar();
             }
         }
     });
@@ -492,16 +500,21 @@ function charts(){
             maintainAspectRatio:false,
 
             onClick:(event,elements)=>{
-                if(!elements.length) return;
+             if(!elements.length) return;
 
-                const index = elements[0].index;
-                const materialSelecionado = top[index][0];
+             const index = elements[0].index;
+             const materialSelecionado = top[index][0];
 
-                document.getElementById("search").value = materialSelecionado;
+             filtroMaterialGrafico =
+             filtroMaterialGrafico === materialSelecionado
+             ? ""
+             : materialSelecionado;
 
-                filtroMaterialGrafico = materialSelecionado;
-                aplicar();
-            }
+             document.getElementById("search").value =
+            filtroMaterialGrafico;
+
+             aplicar();
+          }
         }
     });
 
@@ -521,7 +534,7 @@ const centrosOrdenados = Object.entries(centros)
 
 if(c4) c4.destroy();
 
-cc4 = new Chart(document.getElementById("chartCentro"),{
+c4 = new Chart(document.getElementById("chartCentro"),{
     type:"bar",
     data:{
         labels: centrosOrdenados.map(i => i[0]),
@@ -564,8 +577,12 @@ cc4 = new Chart(document.getElementById("chartCentro"),{
              materiais
             );
 
-            filtroCentroGrafico = centroSelecionado;
-            aplicar();
+            filtroCentroGrafico =
+            filtroCentroGrafico === centroSelecionado
+            ? ""
+            : centroSelecionado;
+
+             aplicar();
         }
     }
 });

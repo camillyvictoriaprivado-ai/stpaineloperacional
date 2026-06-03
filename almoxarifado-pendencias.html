@@ -168,6 +168,63 @@ td{
 
 </div>
 
+<div id="modalID" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.6);
+z-index:9999;
+">
+
+    <div style="
+        background:#fff;
+        width:80%;
+        max-width:900px;
+        margin:50px auto;
+        border-radius:12px;
+        padding:20px;
+        max-height:80vh;
+        overflow:auto;
+    ">
+
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:20px;
+        ">
+
+            <h2 id="tituloModalID"></h2>
+
+            <button
+                class="btn btn-dark-custom"
+                onclick="fecharModalID()">
+                Fechar
+            </button>
+
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Material</th>
+                    <th>Operadora</th>
+                    <th>Cluster</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+
+            <tbody id="tbodyModalID"></tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
 <!-- 🔥 FILTROS AGORA AQUI EMBAIXO -->
 <div class="filter">
     <input id="searchMaterial" placeholder="Buscar material..." oninput="aplicarFiltros()">
@@ -373,12 +430,17 @@ chartStatus = new Chart(document.getElementById("statusChart"),{
 
             const index = elements[0].index;
 
-            filtroGraficoStatus =
-                index === 0
-                ? "AGUARDANDO"
-                : "TRATADA";
+            const valor =
+    index === 0
+    ? "AGUARDANDO"
+    : "TRATADA";
 
-            aplicarFiltros();
+filtroGraficoStatus =
+    filtroGraficoStatus === valor
+        ? ""
+        : valor;
+
+aplicarFiltros();
         }
     }
 });
@@ -404,10 +466,15 @@ chartCluster = new Chart(document.getElementById("clusterChart"),{
 
             const index = elements[0].index;
 
-            filtroGraficoCluster =
-                Object.keys(cluster)[index];
+            const valor =
+    Object.keys(cluster)[index];
 
-            aplicarFiltros();
+filtroGraficoCluster =
+    filtroGraficoCluster === valor
+        ? ""
+        : valor;
+
+aplicarFiltros();
         }
     }
 });
@@ -435,13 +502,18 @@ chartMaterial = new Chart(document.getElementById("materialChart"),{
 
             const index = elements[0].index;
 
-            filtroGraficoMaterial =
-                Object.keys(material)[index];
+            const valor =
+    Object.keys(material)[index];
 
-            document.getElementById("searchMaterial").value =
-                filtroGraficoMaterial;
+filtroGraficoMaterial =
+    filtroGraficoMaterial === valor
+        ? ""
+        : valor;
 
-            aplicarFiltros();
+document.getElementById("searchMaterial").value =
+    filtroGraficoMaterial;
+
+aplicarFiltros();
         }
     }
 });
@@ -578,23 +650,44 @@ function toggleDuplicados(){
     aplicarFiltros();
 }
 
+function abrirModalID(idSelecionado){
+
+    const registros =
+        dadosOriginais.filter(
+            i => get(i,"id") === idSelecionado
+        );
+
+    document.getElementById("tituloModalID").innerText =
+        "ID: " + idSelecionado +
+        " (" + registros.length + " registros)";
+
+    const tbody =
+        document.getElementById("tbodyModalID");
+
+    tbody.innerHTML = "";
+
+    registros.forEach(i=>{
+
+        tbody.innerHTML += `
+        <tr>
+            <td>${get(i,"material")}</td>
+            <td>${get(i,"operadora")}</td>
+            <td>${get(i,"cluster")}</td>
+            <td>${get(i,"status")}</td>
+        </tr>`;
+    });
+
+    document.getElementById("modalID").style.display =
+        "block";
+}
+
+function fecharModalID(){
+    document.getElementById("modalID").style.display =
+        "none";
+}
+
 function verMateriaisDoID(idSelecionado){
-
-    const registros = dadosOriginais.filter(i => get(i,"id") === idSelecionado);
-
-    if(registros.length === 0){
-        alert("Nenhum registro encontrado para esse ID");
-        return;
-    }
-
-    const materiais = [...new Set(registros.map(i => get(i,"material")))];
-
-    alert(
-        `ID: ${idSelecionado}\n` +
-        `Quantidade de registros: ${registros.length}\n` +
-        `Materiais cadastrados (${materiais.length}):\n\n` +
-        materiais.join("\n")
-    );
+    abrirModalID(idSelecionado);
 }
 
 </script>
