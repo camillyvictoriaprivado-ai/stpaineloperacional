@@ -167,10 +167,71 @@ td{
         <canvas id="chartMaterial"></canvas>
     </div>
 
+    <div class="card chart-wide">
+        <h4>Itens por Centro de Custo</h4>
+    <canvas id="chartCentro"></canvas>
+</div>
+
+</div>
+
+<div id="modalCentro" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.6);
+z-index:9999;
+">
+
+    <div style="
+    background:#fff;
+    width:80%;
+    max-width:900px;
+    margin:50px auto;
+    border-radius:12px;
+    padding:20px;
+    max-height:80vh;
+    overflow:auto;
+    ">
+
+        <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:20px;
+        ">
+
+            <h2 id="tituloCentro"></h2>
+
+            <button
+                class="btn btn-dark-custom"
+                onclick="fecharModalCentro()">
+                Fechar
+            </button>
+
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Material</th>
+                    <th>Quantidade</th>
+                </tr>
+            </thead>
+
+            <tbody id="tbodyCentro"></tbody>
+        </table>
+
+    </div>
+
 </div>
 
 <div class="filters">
     <input id="search" placeholder="Buscar material..." oninput="aplicar()">
+
+    <input id="searchCodigo" placeholder="Buscar código..." oninput="aplicar()">
 
     <select id="fCluster" onchange="aplicar()">
         <option value="">Todos clusters</option>
@@ -209,13 +270,40 @@ const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJ
 let dados = [];
 let filtrados = [];
 
-let c1,c2,c3;
+let c1,c2,c3,c4;
 
 let filtroClusterGrafico = "";
 let filtroMaterialGrafico = "";
 
 function num(v){ return Number(v||0); }
 function status(s){ return num(s) < 10 ? "BAIXO" : "OK"; }
+
+function abrirModalCentro(centro, materiais){
+
+    document.getElementById("tituloCentro").innerText =
+        "Centro de Custo: " + centro;
+
+    const tbody = document.getElementById("tbodyCentro");
+
+    tbody.innerHTML = "";
+
+    Object.entries(materiais)
+        .sort((a,b)=>b[1]-a[1])
+        .forEach(([material,qtd])=>{
+
+            tbody.innerHTML += `
+            <tr>
+                <td>${material}</td>
+                <td>${qtd}</td>
+            </tr>`;
+        });
+
+    document.getElementById("modalCentro").style.display = "block";
+}
+
+function fecharModalCentro(){
+    document.getElementById("modalCentro").style.display = "none";
+}
 
 async function load(){
 
@@ -247,12 +335,19 @@ function preencherClusters(){
 function aplicar(){
 
     const t = document.getElementById("search").value.toLowerCase();
+    const codigo = document.getElementById("searchCodigo").value.toLowerCase();
     const cl = document.getElementById("fCluster").value;
     const st = document.getElementById("fStatus").value;
 
     filtrados = dados.filter(i=>{
 
-        const okT = (i.material||"").toLowerCase().includes(t);
+        const okT = (i.material || "").toLowerCase().includes(t);
+
+        const okCodigo =
+        String(i.codigo || i.cod || "")
+        .toLowerCase()
+        .includes(codigo);
+
         const okC = cl ? i.cluster === cl : true;
         const okS = st ? status(i.saldo) === st : true;
 
@@ -262,7 +357,16 @@ function aplicar(){
         const okGraficoMaterial =
             filtroMaterialGrafico ? (i.material || "") === filtroMaterialGrafico : true;
 
-        return okT && okC && okS && okGraficoCluster && okGraficoMaterial;
+        const okGraficoCentro =
+            filtroCentroGrafico ? (i.centro || "") === filtroCentroGrafico : true;
+
+        return okT &&
+        okCodigo &&
+        okC &&
+        okS &&
+        okGraficoCluster &&
+        okGraficoMaterial &&
+        okGraficoCentro;
     });
 
     render();
@@ -400,7 +504,75 @@ function charts(){
             }
         }
     });
+
+    /* =======================
+   4. CENTRO DE CUSTO
+======================= */
+
+const centros = {};
+
+filtrados.forEach(i => {
+    const c = i.centro || "Sem Centro";
+    centros[c] = (centros[c] || 0) + 1;
+});
+
+const centrosOrdenados = Object.entries(centros)
+    .sort((a,b) => b[1] - a[1]);
+
+if(c4) c4.destroy();
+
+cc4 = new Chart(document.getElementById("chartCentro"),{
+    type:"bar",
+    data:{
+        labels: centrosOrdenados.map(i => i[0]),
+        datasets:[{
+            label:"Quantidade de Itens",
+            data: centrosOrdenados.map(i => i[1]),
+            backgroundColor:"#111"
+        }]
+    },
+    options:{
+        indexAxis:'y',
+        responsive:true,
+        maintainAspectRatio:false,
+
+        onClick:(event,elements)=>{
+            if(!elements.length) return;
+
+            const index = elements[0].index;
+            const centroSelecionado = centrosOrdenados[index][0];
+
+            const materiais = {};
+
+            dados
+                .filter(i => (i.centro || "") === centroSelecionado)
+                .forEach(i => {
+
+                    const material = i.material || "Sem Material";
+
+                    materiais[material] =
+                        (materiais[material] || 0) + num(i.saldo);
+                });
+
+            const texto = Object.entries(materiais)
+                .sort((a,b) => b[1] - a[1])
+                .map(([material,qtd]) => `${material}: ${qtd}`)
+                .join('\n');
+
+            abrirModalCentro(
+             centroSelecionado,
+             materiais
+            );
+
+            filtroCentroGrafico = centroSelecionado;
+            aplicar();
+        }
+    }
+});
+
 }
+
+
 
 function render(){
 
@@ -444,9 +616,10 @@ function exportarExcel(){
 function limparFiltro(){
 
     document.getElementById("search").value = "";
+    document.getElementById("searchCodigo").value = "";
     document.getElementById("fCluster").value = "";
     document.getElementById("fStatus").value = "";
-
+    filtroCentroGrafico = "";
     filtroClusterGrafico = "";
     filtroMaterialGrafico = "";
 
