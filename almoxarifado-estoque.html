@@ -243,8 +243,12 @@ z-index:9999;
         <option value="OK">OK</option>
     </select>
 
+    <select id="fDepos" onchange="aplicar()">
+    <option value="">Todos depósitos</option>
+    </select>
+
     <button class="btn btn-yellow" onclick="limparFiltro()">Limpar Filtros</button>
-</div>
+    </div>
 
 <div class="table">
 <table>
@@ -316,6 +320,7 @@ async function load(){
     filtrados = [...dados];
 
     preencherClusters();
+    preencherDepositos();
     render();
     kpis();
     charts();
@@ -334,16 +339,36 @@ function preencherClusters(){
     });
 }
 
+function preencherDepositos(){
+
+    const depositos = [
+        ...new Set(
+            dados.map(i => i.deposito).filter(Boolean)
+        )
+    ];
+
+    const sel = document.getElementById("fDepos");
+
+    depositos.forEach(dep=>{
+        const o = document.createElement("option");
+        o.value = dep;
+        o.innerText = dep;
+        sel.appendChild(o);
+    });
+}
+
 function aplicar(){
 
     const t = document.getElementById("search").value.toLowerCase();
     const codigo = document.getElementById("searchCodigo").value.toLowerCase();
     const cl = document.getElementById("fCluster").value;
     const st = document.getElementById("fStatus").value;
+    const dep = document.getElementById("fDepos").value;
 
     filtrados = dados.filter(i=>{
 
         const okT = (i.material || "").toLowerCase().includes(t);
+        const okD = dep ? (i.deposito || "") === dep : true;
 
         const okCodigo =
         String(i.codigo || i.cod || "")
@@ -365,6 +390,7 @@ function aplicar(){
         return okT &&
         okCodigo &&
         okC &&
+        okD &&
         okS &&
         okGraficoCluster &&
         okGraficoMaterial &&
@@ -636,6 +662,7 @@ function limparFiltro(){
     document.getElementById("searchCodigo").value = "";
     document.getElementById("fCluster").value = "";
     document.getElementById("fStatus").value = "";
+    document.getElementById("fDepos").value = "";
     filtroCentroGrafico = "";
     filtroClusterGrafico = "";
     filtroMaterialGrafico = "";
