@@ -103,10 +103,11 @@ body{
 .kpi h3{ margin:0; font-size:13px; }
 
 .kpi p{
-    font-size:24px;
+    font-size:16px;
     margin:10px 0 0;
     color:#ff7a00;
     font-weight:bold;
+    line-height:1.6;
 }
 
 /* GRÁFICOS */
@@ -215,11 +216,6 @@ body{
     </div>
 
     <div class="panel">
-        <h3>Por Operadora</h3>
-        <canvas id="operadoraChart"></canvas>
-    </div>
-
-    <div class="panel">
         <h3>Produtividade</h3>
         <div class="circle" id="circle">0%</div>
     </div>
@@ -235,7 +231,7 @@ body{
 
 const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec";
 
-let barChart, pieChart, clusterChart, operadoraChart, forecastChart;
+let barChart, pieChart, clusterChart, forecastChart;
 
 function uniqueById(arr, key = "id") {
     const seen = new Set();
@@ -280,12 +276,6 @@ async function load(){
         clusterMap[c] = (clusterMap[c] || 0) + 1;
     });
 
-    const operadoraMap = {};
-    base.forEach(i=>{
-        const o = get(i,"responsavel fibra") || "SEM RESPONSAVEL";
-        operadoraMap[o] = (operadoraMap[o] || 0) + 1;
-    });
-
     document.getElementById("aguardando").innerText = aguardando;
     document.getElementById("cancelado").innerText = cancelado;
     document.getElementById("concluido").innerText = concluido;
@@ -294,9 +284,9 @@ async function load(){
     document.getElementById("fibra").innerText = fibraNome;
 
     const total = base.length;
-    const perc = total ? Math.round((concluido / total) * 100) : 0;
+const perc = total ? Math.round((concluido / total) * 100) : 0;
 
-    // ===== PREVISÃO MENSAL =====
+// ===== PREVISÃO MENSAL =====
 
 const hoje = new Date();
 
@@ -312,20 +302,26 @@ const mediaDia = diaAtual > 0
     ? total / diaAtual
     : 0;
 
-const previsaoMensal =
+const totalPrevisto =
     Math.round(mediaDia * diasNoMes);
+
+const previsaoAdicional =
+    totalPrevisto - total;
 
 const metaMensal = 1400;
 
-const percentualMeta =
-    Math.round(
-        (previsaoMensal / metaMensal) * 100
-    );
+const faltamMeta = Math.max(
+    0,
+    metaMensal - total
+);
 
-document.getElementById("previsao").innerText =
-    `${previsaoMensal} IDs`;
+document.getElementById("previsao").innerHTML = `
+    Atual: ${total.toLocaleString("pt-BR")}<br>
+    Prev.: +${previsaoAdicional.toLocaleString("pt-BR")}<br>
+    Total: ${totalPrevisto.toLocaleString("pt-BR")}
+`;
 
-    document.getElementById("circle").innerText = perc + "%";
+document.getElementById("circle").innerText = perc + "%";
     document.getElementById("circle").style.background =
         `conic-gradient(#ff7a00 ${perc}%, #eee ${perc}%)`;
 
@@ -358,16 +354,6 @@ document.getElementById("previsao").innerText =
         options:{ plugins:{ legend:{ display:false } } }
     });
 
-    if(operadoraChart) operadoraChart.destroy();
-    operadoraChart = new Chart(document.getElementById("operadoraChart"),{
-        type:"bar",
-        data:{
-            labels:Object.keys(operadoraMap),
-            datasets:[{ data:Object.values(operadoraMap), backgroundColor:"#111" }]
-        },
-        options:{ plugins:{ legend:{ display:false } } }
-    });
-
     // ===== GRÁFICO DE PROJEÇÃO =====
 
 if(forecastChart) forecastChart.destroy();
@@ -378,16 +364,16 @@ forecastChart = new Chart(
         type:"bar",
         data:{
             labels:[
-                "Atual",
-                "Projeção",
-                "Meta"
-            ],
-            datasets:[{
-                data:[
-                    total,
-                    previsaoMensal,
-                    metaMensal
-                ],
+    "Atual",
+    "Previsão",
+    "Total Previsto"
+],
+datasets:[{
+    data:[
+        total,
+        previsaoAdicional,
+        totalPrevisto
+    ],
                 backgroundColor:[
                     "#111",
                     "#ff7a00",
