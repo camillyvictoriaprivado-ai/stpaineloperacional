@@ -791,17 +791,23 @@ function gerarInsightsIA(){
     const el = document.getElementById("conteudoIA");
     const lista = dadosFiltrados;
 
-    const total = lista.length;
+// 🔥 FILTRO REAL
+const listaAguardando = lista.filter(i =>
+    norm(i.status).includes("AGUARDANDO")
+);
 
-    const aguardando = lista.filter(x => norm(x.status).includes("AGUARDANDO")).length;
-    const tratadas = lista.filter(x => norm(x.status).includes("TRATADA")).length;
-    const duplicados = contarDuplicados(lista);
+const total = lista.length;
 
-    const clusterMap = agrupar(lista,"cluster");
-    const materialMap = agrupar(lista,"material");
+const aguardando = listaAguardando.length;
+const tratadas = lista.filter(x => norm(x.status).includes("TRATADA")).length;
 
-    const topCluster = Object.entries(clusterMap).sort((a,b)=>b[1]-a[1])[0];
-    const topMaterial = Object.entries(materialMap).sort((a,b)=>b[1]-a[1])[0];
+const duplicados = contarDuplicados(lista);
+
+const clusterMap = agrupar(listaAguardando, "cluster");
+const materialMap = agrupar(listaAguardando, "material");
+
+const topCluster = Object.entries(clusterMap).sort((a,b)=>b[1]-a[1])[0];
+const topMaterial = Object.entries(materialMap).sort((a,b)=>b[1]-a[1])[0];
 
     // 🔥 cálculo de prioridade real
     const backlogRate = total > 0 ? (aguardando / total) * 100 : 0;
@@ -864,7 +870,11 @@ function gerarInsightsIA(){
 
 function abrirIAInsights(){
     document.getElementById("modalIA").style.display = "block";
+
     gerarInsightsIA();
+    const listaAguardando = lista.filter(i =>
+    norm(i.status).includes("AGUARDANDO")
+);
 }
 
 function fecharIAInsights(){
@@ -906,6 +916,37 @@ function calcularPendenciaPorID(lista){
         faltam: v.aguardando,
         concluido: v.tratada === v.total
     }));
+}
+
+function calcularMaiorMaterialOfensor(lista) {
+
+    const aguardando = apenasAguardando(lista);
+
+    const mapa = {};
+
+    aguardando.forEach(i => {
+        const material = get(i, "material") || "Sem Info";
+        mapa[material] = (mapa[material] || 0) + 1;
+    });
+
+    let topMaterial = null;
+    let topQtd = 0;
+
+    Object.entries(mapa).forEach(([material, qtd]) => {
+        if (qtd > topQtd) {
+            topMaterial = material;
+            topQtd = qtd;
+        }
+    });
+
+    return {
+        material: topMaterial,
+        qtd: topQtd
+    };
+}
+
+function apenasAguardando(lista){
+    return lista.filter(i => norm(i.status).includes("AGUARDANDO"));
 }
 
 </script>
