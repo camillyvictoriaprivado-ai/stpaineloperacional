@@ -88,7 +88,7 @@ body{
 /* KPIS */
 .kpis{
     display:grid;
-    grid-template-columns:repeat(3,1fr);
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
     gap:15px;
     padding:20px;
 }
@@ -189,6 +189,11 @@ body{
         <p id="fibra">-</p>
     </div>
 
+    <div class="kpi">
+        <h3>Previsão Mensal</h3>
+        <p id="previsao">0</p>
+    </div>
+
 </div>
 
 <!-- GRÁFICOS -->
@@ -219,13 +224,18 @@ body{
         <div class="circle" id="circle">0%</div>
     </div>
 
+    <div class="panel">
+        <h3>Projeção Mensal</h3>
+        <canvas id="forecastChart"></canvas>
+    </div>
+
 </div>
 
 <script>
 
 const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec";
 
-let barChart, pieChart, clusterChart, operadoraChart;
+let barChart, pieChart, clusterChart, operadoraChart, forecastChart;
 
 function uniqueById(arr, key = "id") {
     const seen = new Set();
@@ -286,6 +296,35 @@ async function load(){
     const total = base.length;
     const perc = total ? Math.round((concluido / total) * 100) : 0;
 
+    // ===== PREVISÃO MENSAL =====
+
+const hoje = new Date();
+
+const diasNoMes = new Date(
+    hoje.getFullYear(),
+    hoje.getMonth() + 1,
+    0
+).getDate();
+
+const diaAtual = hoje.getDate();
+
+const mediaDia = diaAtual > 0
+    ? total / diaAtual
+    : 0;
+
+const previsaoMensal =
+    Math.round(mediaDia * diasNoMes);
+
+const metaMensal = 1400;
+
+const percentualMeta =
+    Math.round(
+        (previsaoMensal / metaMensal) * 100
+    );
+
+document.getElementById("previsao").innerText =
+    `${previsaoMensal} IDs`;
+
     document.getElementById("circle").innerText = perc + "%";
     document.getElementById("circle").style.background =
         `conic-gradient(#ff7a00 ${perc}%, #eee ${perc}%)`;
@@ -328,6 +367,56 @@ async function load(){
         },
         options:{ plugins:{ legend:{ display:false } } }
     });
+
+    // ===== GRÁFICO DE PROJEÇÃO =====
+
+if(forecastChart) forecastChart.destroy();
+
+forecastChart = new Chart(
+    document.getElementById("forecastChart"),
+    {
+        type:"bar",
+        data:{
+            labels:[
+                "Atual",
+                "Projeção",
+                "Meta"
+            ],
+            datasets:[{
+                data:[
+                    total,
+                    previsaoMensal,
+                    metaMensal
+                ],
+                backgroundColor:[
+                    "#111",
+                    "#ff7a00",
+                    "#00aa55"
+                ]
+            }]
+        },
+        options:{
+            responsive:true,
+            plugins:{
+                legend:{
+                    display:false
+                },
+                tooltip:{
+                    callbacks:{
+                        label:(ctx)=>
+                            ctx.raw.toLocaleString("pt-BR")
+                    }
+                }
+            },
+            scales:{
+                y:{
+                    beginAtZero:true
+                }
+            }
+        }
+    }
+);
+
 }
 
 async function exportarExcel(){
