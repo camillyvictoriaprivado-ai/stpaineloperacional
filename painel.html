@@ -321,8 +321,11 @@ async function carregar() {
     const aguardandoFechamento =
     base.filter(i => (i.status || "").trim() === "Aguardando Fechamento").length;
 
-    const supervisorCidade =
-    base.filter(i => (i.status || "").trim() === "Supervisor Cidade").length;
+    const supervisorCidade = new Set(
+    base
+        .filter(i => (i.status || "").trim() === "Supervisor Cidade")
+        .map(i => i.id)
+    ).size;
 
     const eps =
     base.filter(i => (i.status || "").trim() === "EPS").length;
@@ -336,16 +339,51 @@ async function carregar() {
     document.getElementById("concluidos").innerText =
     supervisorCidade;
 
-    const total = base.length;
-    const percent = total
-    ? Math.round((supervisorCidade / total) * 100)
-    : 0;
+// META MENSAL
+const metaMes = 1400;
 
-    document.getElementById("percent").innerText =
-    "Supervisor Cidade: " + percent + "%";
+// IDs únicos
+const idsUnicos = new Set(
+    base.map(item => item.id)
+).size;
 
-    document.getElementById("bar").style.width =
-    percent + "%";
+// Data atual
+const hoje = new Date();
+const diaAtual = hoje.getDate();
+
+// Dias do mês
+const diasNoMes = new Date(
+    hoje.getFullYear(),
+    hoje.getMonth() + 1,
+    0
+).getDate();
+
+// Média diária
+const mediaDia = idsUnicos / diaAtual;
+
+// Previsão para o fim do mês
+const previsaoMes = Math.round(
+    mediaDia * diasNoMes
+);
+
+// Quanto ainda deve ser produzido mantendo o ritmo atual
+const faltam = Math.max(
+    0,
+    previsaoMes - idsUnicos
+);
+
+// BARRA = progresso REAL atual
+const percent = Math.min(
+    Math.round((idsUnicos / metaMes) * 100),
+    100
+);
+
+document.getElementById("percent").innerText =
+`Atual: ${idsUnicos} | Previsão: ${previsaoMes} | Faltam: ${faltam}`;
+
+document.getElementById("bar").style.width =
+percent + "%";
+
 }
 
 /* 🔥 ISSO AQUI É O QUE FALTAVA */
