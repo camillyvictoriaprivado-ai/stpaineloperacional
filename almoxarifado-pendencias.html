@@ -121,6 +121,13 @@ td{
     background:#c0392b;
 }
 
+.filter {
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+}
+
 </style>
 
 </head>
@@ -165,6 +172,8 @@ td{
     <div class="card-chart" style="grid-column:1 / span 2;">
         <canvas id="materialChart"></canvas>
     </div>
+
+</div>
 
 </div>
 
@@ -247,6 +256,14 @@ z-index:9999;
 
     <button class="btn btn-yellow" onclick="limparFiltros()">
     Limpar Filtros
+    </button>
+
+    <button class="btn btn-yellow" onclick="abrirIAInsights()">
+    🤖 Insights Inteligentes
+    </button>
+
+    </div>
+
 </button>
 
 </div>
@@ -261,10 +278,51 @@ z-index:9999;
     <th>Operadora</th>
     <th>Cluster</th>
     <th>Status</th>
+    <th>Pendência</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
 </table>
+</div>
+
+<div id="modalIA" style="
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,.6);
+z-index:99999;
+">
+
+    <div style="
+        background:#fff;
+        width:90%;
+        max-width:900px;
+        margin:50px auto;
+        border-radius:12px;
+        padding:20px;
+        max-height:85vh;
+        overflow:auto;
+    ">
+
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-bottom:15px;
+        ">
+            <h2>🤖 Insights Inteligentes</h2>
+
+            <button class="btn btn-dark-custom" onclick="fecharIAInsights()">
+                Fechar
+            </button>
+        </div>
+
+        <div id="conteudoIA">⏳ Gerando insights...</div>
+
+    </div>
 </div>
 
 <script>
@@ -311,6 +369,9 @@ function agrupar(lista,campo){
             { numeric: true }
         )
     );
+
+    // 🔥 AGORA SIM: depois de carregar os dados
+    window.resumoID = calcularPendenciaPorID(dadosOriginais);
 
     dadosFiltrados = [...dadosOriginais];
 
@@ -522,6 +583,12 @@ aplicarFiltros();
 
 function render(lista){
 
+    // 🔥 MAPA DE PENDÊNCIAS POR ID
+    const resumoMap = {};
+    window.resumoID?.forEach(r => {
+        resumoMap[r.id] = r;
+    });
+
     const idsDuplicados = getDuplicatedIds(lista);
 
     // 🔽 ORDENA POR ID (crescente)
@@ -533,27 +600,46 @@ function render(lista){
         );
     });
 
-    const tbody=document.getElementById("tbody");
-    tbody.innerHTML="";
+    const tbody = document.getElementById("tbody");
+    tbody.innerHTML = "";
 
-    listaOrdenada.forEach(i=>{
+    listaOrdenada.forEach(i => {
+
         const idAtual = get(i,"id");
         const isDup = idsDuplicados.has(idAtual);
 
+        // 🔥 pega resumo do ID
+        const pend = resumoMap[idAtual];
+
+        const faltando = pend ? pend.faltam : 0;
+        const total = pend ? pend.total : 0;
+        const concluido = pend ? pend.concluido : false;
+
         tbody.innerHTML += `
         <tr style="${isDup ? 'background:#ffe5e5;' : ''}">
+            
             <td 
                 style="cursor:pointer; ${isDup ? 'color:#d60000;font-weight:bold;' : ''}"
                 onclick="verMateriaisDoID('${idAtual}')"
             >
                 ${idAtual}
             </td>
+
             <td>${get(i,"material")}</td>
             <td>${get(i,"operadora")}</td>
             <td>${get(i,"cluster")}</td>
+
             <td class="${norm(i.status).includes("TRATADA") ? "status-tratada" : "status-aguardando"}">
                 ${get(i,"status")}
             </td>
+
+            <td style="
+                font-weight:bold;
+                color:${concluido ? '#2ecc71' : '#ff7a00'};
+            ">
+                ${faltando} faltando
+            </td>
+
         </tr>`;
     });
 }
@@ -688,6 +774,138 @@ function fecharModalID(){
 
 function verMateriaisDoID(idSelecionado){
     abrirModalID(idSelecionado);
+}
+
+function scoreItem(i){
+    let score = 0;
+
+    if(norm(i.status).includes("AGUARDANDO")) score += 5;
+    if(get(i,"material")) score += 2;
+    if(get(i,"cluster")) score += 2;
+
+    return score;
+}
+
+function gerarInsightsIA(){
+
+    const el = document.getElementById("conteudoIA");
+    const lista = dadosFiltrados;
+
+    const total = lista.length;
+
+    const aguardando = lista.filter(x => norm(x.status).includes("AGUARDANDO")).length;
+    const tratadas = lista.filter(x => norm(x.status).includes("TRATADA")).length;
+    const duplicados = contarDuplicados(lista);
+
+    const clusterMap = agrupar(lista,"cluster");
+    const materialMap = agrupar(lista,"material");
+
+    const topCluster = Object.entries(clusterMap).sort((a,b)=>b[1]-a[1])[0];
+    const topMaterial = Object.entries(materialMap).sort((a,b)=>b[1]-a[1])[0];
+
+    // 🔥 cálculo de prioridade real
+    const backlogRate = total > 0 ? (aguardando / total) * 100 : 0;
+
+    let prioridade = "BAIXA";
+
+    if(backlogRate > 70 || duplicados > 10){
+        prioridade = "ALTA";
+    } else if(backlogRate > 40){
+        prioridade = "MÉDIA";
+    }
+
+    let texto = "";
+
+    texto += `<h3>📊 Diagnóstico do Sistema</h3>`;
+    texto += `<p>Total de registros: <b>${total}</b></p>`;
+    texto += `<p>Backlog: <b>${backlogRate.toFixed(1)}%</b></p>`;
+    texto += `<p>Prioridade operacional: <b>${prioridade}</b></p>`;
+
+    texto += `<hr>`;
+
+    texto += `<h3>🚨 Problemas Identificados</h3>`;
+
+    if(duplicados > 0){
+        texto += `<p>🔁 Duplicidade detectada: <b>${duplicados}</b> grupos</p>`;
+    }
+
+    if(topMaterial){
+        texto += `<p>📦 Principal causa: <b>${topMaterial[0]}</b></p>`;
+    }
+
+    if(topCluster){
+        texto += `<p>📍 Cluster crítico: <b>${topCluster[0]}</b></p>`;
+    }
+
+    texto += `<hr>`;
+
+    texto += `<h3>🧠 Análise de Causa Provável</h3>`;
+
+    if(aguardando > tratadas){
+        texto += `<p>⚠️ Fluxo está acumulando mais do que resolve → possível gargalo operacional.</p>`;
+    }
+
+    if(duplicados > 0){
+        texto += `<p>⚠️ Possível falha de entrada de dados (duplicação recorrente).</p>`;
+    }
+
+    texto += `<hr>`;
+
+    texto += `<h3>💡 Plano de Ação Recomendado</h3>`;
+    texto += `<ul>
+        <li>Atacar cluster ${topCluster?.[0] || "N/A"} primeiro</li>
+        <li>Corrigir origem do material ${topMaterial?.[0] || "N/A"}</li>
+        <li>Implementar validação contra duplicados</li>
+        <li>Reduzir backlog abaixo de 30%</li>
+    </ul>`;
+
+    el.innerHTML = texto;
+}
+
+function abrirIAInsights(){
+    document.getElementById("modalIA").style.display = "block";
+    gerarInsightsIA();
+}
+
+function fecharIAInsights(){
+    document.getElementById("modalIA").style.display = "none";
+}
+
+function calcularPendenciaPorID(lista){
+    const mapa = {};
+
+    lista.forEach(i => {
+        const id = get(i,"id");
+        const status = norm(i.status);
+
+        if(!id) return;
+
+        if(!mapa[id]){
+            mapa[id] = {
+                total: 0,
+                aguardando: 0,
+                tratada: 0
+            };
+        }
+
+        mapa[id].total++;
+
+        if(status.includes("AGUARDANDO")){
+            mapa[id].aguardando++;
+        }
+
+        if(status.includes("TRATADA")){
+            mapa[id].tratada++;
+        }
+    });
+
+    // transforma em lista
+    return Object.entries(mapa).map(([id, v]) => ({
+        id,
+        ...v,
+        faltam: v.aguardando,
+        concluido: v.tratada === v.total
+    }));
 }
 
 </script>
