@@ -11,69 +11,201 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
 
-body{
-    background:#f5f7fb;
-    font-family:'Orbitron',sans-serif;
-    color:#111;
+:root{
+    --primary:#f58220;
+    --primary-light:#ff9f43;
+    --secondary:#003a70;
+    --bg:#f4f6f9;
+    --white:#ffffff;
+    --text:#222;
+    --border:#e6eaef;
 }
 
-.card-kpi,
-.chart-card{
-    background:#fff;
+body{
+    background:var(--bg);
+    font-family:'Montserrat',sans-serif;
+    color:var(--text);
+}
+
+/* KPI CARDS */
+
+.card-kpi{
+    background:var(--white);
+
     border:none;
-    border-radius:15px;
-    box-shadow:0 3px 10px rgba(0,0,0,.08);
+
+    border-radius:18px;
+
+    padding:10px;
+
+    box-shadow:
+        0 4px 15px rgba(0,0,0,.06);
+
+    transition:.25s;
+}
+
+.card-kpi:hover{
+    transform:translateY(-3px);
+
+    box-shadow:
+        0 10px 25px rgba(0,0,0,.08);
 }
 
 .kpi-value{
-    font-size:32px;
-    font-weight:700;
-    color:#ff7a00;
+    font-size:34px;
+
+    font-weight:800;
+
+    color:var(--secondary);
 }
 
+/* CHARTS */
+
 .chart-card{
-    padding:15px;
+    background:var(--white);
+
+    border:none;
+
+    border-radius:18px;
+
+    padding:20px;
+
+    box-shadow:
+        0 4px 15px rgba(0,0,0,.06);
 }
 
 .chart-container{
-    position: relative;
-    height: 320px;
+    position:relative;
+    height:320px;
 }
 
 canvas{
-    max-height: 100% !important;
+    max-height:100% !important;
 }
 
-h2, h5{
+/* TITULOS */
+
+h2{
+    color:var(--secondary);
+    font-weight:800;
+}
+
+h5{
+    color:var(--secondary);
     font-weight:700;
 }
 
+/* TABELAS */
+
+.table{
+    background:white;
+    border-radius:12px;
+    overflow:hidden;
+}
+
 .table thead th{
-    background:#111 !important;
-    color:#fff;
+    background:var(--secondary) !important;
+    color:white;
+
     border:none;
+
+    font-weight:700;
+}
+
+.table tbody td{
+    vertical-align:middle;
+}
+
+.table tbody tr{
+    transition:.2s;
 }
 
 .table tbody tr:hover{
-    background:rgba(255,122,0,.08);
+    background:
+        rgba(245,130,32,.08);
 }
+
+/* BOTÕES */
 
 .btn-dark{
-    background:#111;
+    background:var(--secondary);
     border:none;
-}
 
-.btn-warning{
-    background:#ffcc00;
-    border:none;
-    color:#111;
     font-weight:600;
 }
 
+.btn-dark:hover{
+    background:#004d91;
+}
+
+.btn-warning{
+    background:var(--primary);
+
+    border:none;
+
+    color:white;
+
+    font-weight:700;
+}
+
 .btn-warning:hover{
-    background:#ffd633;
+    background:var(--primary-light);
+}
+
+/* FILTROS E INPUTS */
+
+.form-control,
+.form-select{
+    border:1px solid var(--border);
+
+    border-radius:10px;
+
+    padding:10px 14px;
+}
+
+.form-control:focus,
+.form-select:focus{
+    border-color:var(--primary);
+
+    box-shadow:
+        0 0 0 4px rgba(245,130,32,.12);
+}
+
+/* BADGES */
+
+.badge{
+    padding:8px 10px;
+    border-radius:8px;
+    font-weight:600;
+}
+
+/* SEÇÕES */
+
+.section-card{
+    background:white;
+
+    border-radius:18px;
+
+    padding:20px;
+
+    box-shadow:
+        0 4px 15px rgba(0,0,0,.06);
+}
+
+/* RESPONSIVO */
+
+@media(max-width:768px){
+
+    .kpi-value{
+        font-size:28px;
+    }
+
+    .chart-container{
+        height:260px;
+    }
+
 }
 </style>
 

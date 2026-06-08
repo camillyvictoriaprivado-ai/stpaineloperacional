@@ -6,58 +6,241 @@
 <title>Login - Dashboard</title>
 
 <style>
-body{
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+
+:root{
+    --primary:#f58220;
+    --primary-light:#ff9f43;
+    --secondary:#003a70;
+    --white:#ffffff;
+}
+
+*{
     margin:0;
-    font-family:Arial;
-    background: linear-gradient(135deg, #ff7a00, #111);
-    height:100vh;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Montserrat',sans-serif;
+
+    min-height:100vh;
+
     display:flex;
     align-items:center;
     justify-content:center;
+
+    padding:20px;
+
+    background:
+        radial-gradient(
+            circle at top left,
+            rgba(245,130,32,.18),
+            transparent 35%
+        ),
+
+        radial-gradient(
+            circle at bottom right,
+            rgba(0,58,112,.45),
+            transparent 40%
+        ),
+
+        linear-gradient(
+            135deg,
+            #08111f,
+            #0f1c31
+        );
+
+    position:relative;
+    overflow:hidden;
+}
+
+/* linhas sutis de fundo */
+
+body::before{
+    content:"";
+
+    position:absolute;
+
+    inset:0;
+
+    background:
+        linear-gradient(
+            rgba(255,255,255,.02) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(255,255,255,.02) 1px,
+            transparent 1px
+        );
+
+    background-size:40px 40px;
+
+    pointer-events:none;
 }
 
 .box{
-    background:#fff;
-    padding:30px;
-    border-radius:12px;
-    width:320px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.3);
+    width:100%;
+    max-width:430px;
+
+    padding:45px;
+
+    border-radius:24px;
+
+    background:
+        rgba(255,255,255,.08);
+
+    backdrop-filter:blur(18px);
+
+    -webkit-backdrop-filter:blur(18px);
+
+    border:
+        1px solid rgba(255,255,255,.12);
+
+    box-shadow:
+        0 30px 80px rgba(0,0,0,.45);
+
+    position:relative;
+    z-index:1;
+}
+
+.logo{
+    text-align:center;
+    margin-bottom:30px;
+}
+
+.logo img{
+    width:220px;
+    max-width:100%;
+    height:auto;
+
+    filter:
+        drop-shadow(
+            0 10px 20px rgba(0,0,0,.35)
+        );
 }
 
 h2{
     text-align:center;
-    margin-bottom:20px;
+
+    color:white;
+
+    font-size:24px;
+
+    font-weight:700;
+
+    margin-bottom:30px;
 }
 
 input{
     width:100%;
-    padding:12px;
-    margin:10px 0;
-    border:1px solid #ddd;
-    border-radius:8px;
+
+    padding:15px 18px;
+
+    margin-bottom:16px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:
+        rgba(255,255,255,.08);
+
+    color:white;
+
+    font-size:15px;
+
+    transition:.25s;
+}
+
+input::placeholder{
+    color:rgba(255,255,255,.55);
+}
+
+input:focus{
     outline:none;
+
+    background:
+        rgba(255,255,255,.12);
+
+    box-shadow:
+        0 0 0 2px rgba(245,130,32,.5);
 }
 
 button{
     width:100%;
-    padding:12px;
-    background:#ff7a00;
+
+    padding:15px;
+
     border:none;
-    color:#fff;
-    font-weight:bold;
-    border-radius:8px;
+
+    border-radius:12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            var(--primary),
+            var(--primary-light)
+        );
+
+    color:white;
+
+    font-size:15px;
+
+    font-weight:700;
+
     cursor:pointer;
+
+    transition:.25s;
 }
 
 button:hover{
-    background:#ff8f2f;
+    transform:translateY(-2px);
+
+    box-shadow:
+        0 15px 30px rgba(245,130,32,.35);
+}
+
+button:active{
+    transform:scale(.98);
 }
 
 .msg{
     text-align:center;
-    margin-top:10px;
-    font-size:13px;
-    color:red;
+
+    margin-top:15px;
+
+    color:#ff6b6b;
+
+    font-size:14px;
+
+    font-weight:600;
+}
+
+.footer{
+    margin-top:25px;
+
+    text-align:center;
+
+    color:rgba(255,255,255,.45);
+
+    font-size:12px;
+}
+
+@media(max-width:480px){
+
+    .box{
+        padding:35px 25px;
+    }
+
+    .logo img{
+        width:180px;
+    }
+
+    h2{
+        font-size:20px;
+    }
 }
 </style>
 
@@ -66,14 +249,25 @@ button:hover{
 <body>
 
 <div class="box">
-    <h2>LOGIN</h2>
+
+    <div class="logo">
+        <img src="logo.png" alt="Logo ST">
+    </div>
+
+    <h2>Acesso ao Sistema</h2>
 
     <input type="text" id="user" placeholder="Usuário">
+
     <input type="password" id="pass" placeholder="Senha">
 
     <button onclick="login()">Entrar</button>
 
     <div class="msg" id="msg"></div>
+
+    <div class="footer">
+        Portal Operacional ST
+    </div>
+
 </div>
 
 <script>

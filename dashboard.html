@@ -11,26 +11,54 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
 
-body{
-    margin:0;
-    font-family:'Orbitron', Arial, sans-serif;
-    background:#f5f7fb;
-    color:#111;
+:root{
+    --primary:#f58220;
+    --primary-light:#ff9f43;
+    --secondary:#003a70;
+    --bg:#f4f6f9;
+    --white:#ffffff;
+    --text:#222;
+    --border:#e6eaef;
 }
 
-/* HEADER PADRONIZADO */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:'Montserrat',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+}
+
+/* HEADER */
+
 .header{
-    background:#fff;
-    padding:20px;
+    background:white;
+
+    padding:18px 25px;
+
     display:flex;
     justify-content:space-between;
     align-items:center;
-    border-bottom:2px solid #ff7a00;
+
+    box-shadow:
+        0 2px 12px rgba(0,0,0,.05);
 }
 
-.header h1{ margin:0; }
+.header h1{
+    margin:0;
+
+    color:var(--secondary);
+
+    font-size:24px;
+
+    font-weight:800;
+}
 
 .header div{
     display:flex;
@@ -38,103 +66,237 @@ body{
 }
 
 /* BOTÕES */
+
 .btn{
     border:none;
-    padding:10px 14px;
-    border-radius:6px;
+
+    padding:11px 16px;
+
+    border-radius:10px;
+
     cursor:pointer;
-    font-family:'Orbitron', sans-serif;
-    transition:0.2s;
+
+    font-family:'Montserrat',sans-serif;
+
+    font-weight:600;
+
+    transition:.25s;
 }
 
-/* PRETO */
 .btn-dark-custom{
-    background:#111;
-    color:#fff;
+    background:var(--secondary);
+    color:white;
 }
 
 .btn-dark-custom:hover{
-    background:#333;
+    background:#004d91;
 }
 
-/* AMARELO */
 .btn-yellow{
-    background:#ffcc00;
-    color:#111;
-    font-weight:600;
+    background:var(--primary);
+    color:white;
+    font-weight:700;
 }
 
 .btn-yellow:hover{
-    background:#ffd633;
+    background:var(--primary-light);
 }
 
+/* VOLTAR */
+
 .back{
-    padding:15px 20px;
+    padding:20px;
 }
 
 .back button{
-    background:#fff;
-    border:1px solid #ff7a00;
-    color:#ff7a00;
-    padding:10px 14px;
+    background:white;
+
+    border:1px solid var(--border);
+
+    color:var(--secondary);
+
+    padding:10px 16px;
+
+    border-radius:10px;
+
     cursor:pointer;
+
+    transition:.25s;
 }
 
 .back button:hover{
-    background:#ff7a00;
-    color:#fff;
+    background:var(--secondary);
+    color:white;
 }
 
-/* KPIS */
+/* KPIs */
+
 .kpis{
     display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:15px;
+
+    grid-template-columns:
+        repeat(auto-fit,minmax(240px,1fr));
+
+    gap:20px;
+
     padding:20px;
 }
 
 .kpi{
-    background:#fff;
-    border:1px solid #eee;
-    border-radius:12px;
-    padding:18px;
+    background:white;
+
+    border:none;
+
+    border-radius:18px;
+
+    padding:22px;
+
+    box-shadow:
+        0 4px 15px rgba(0,0,0,.06);
+
+    transition:.25s;
 }
 
-.kpi h3{ margin:0; font-size:13px; }
+.kpi:hover{
+    transform:translateY(-3px);
+
+    box-shadow:
+        0 10px 25px rgba(0,0,0,.08);
+}
+
+.kpi h3{
+    margin:0;
+
+    color:#666;
+
+    font-size:14px;
+
+    font-weight:600;
+}
 
 .kpi p{
-    font-size:16px;
-    margin:10px 0 0;
-    color:#ff7a00;
-    font-weight:bold;
-    line-height:1.6;
+    font-size:30px;
+
+    margin-top:12px;
+
+    color:var(--secondary);
+
+    font-weight:800;
+
+    line-height:1.2;
 }
 
-/* GRÁFICOS */
+/* PAINÉIS */
+
 .middle{
     display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:15px;
+
+    grid-template-columns:
+        repeat(auto-fit,minmax(450px,1fr));
+
+    gap:20px;
+
     padding:20px;
 }
 
 .panel{
-    background:#fff;
-    border:1px solid #eee;
-    border-radius:12px;
-    padding:15px;
+    background:white;
+
+    border:none;
+
+    border-radius:18px;
+
+    padding:20px;
+
+    box-shadow:
+        0 4px 15px rgba(0,0,0,.06);
 }
 
+/* GRÁFICO CIRCULAR */
+
 .circle{
-    width:140px;
-    height:140px;
+    width:160px;
+    height:160px;
+
     border-radius:50%;
+
     display:flex;
     align-items:center;
     justify-content:center;
+
     margin:auto;
-    font-size:26px;
-    background:conic-gradient(#ff7a00 0%, #eee 0%);
+
+    font-size:30px;
+
+    font-weight:800;
+
+    color:var(--secondary);
+
+    background:
+        conic-gradient(
+            var(--primary) 0%,
+            var(--primary-light) 65%,
+            #e7ebf0 65%
+        );
+
+    position:relative;
+}
+
+.circle::before{
+    content:"";
+
+    position:absolute;
+
+    width:120px;
+    height:120px;
+
+    background:white;
+
+    border-radius:50%;
+}
+
+.circle span{
+    position:relative;
+    z-index:1;
+}
+
+/* TÍTULOS DOS PAINÉIS */
+
+.panel h3,
+.panel h4,
+.panel h5{
+    color:var(--secondary);
+    font-weight:700;
+    margin-bottom:15px;
+}
+
+/* RESPONSIVO */
+
+@media(max-width:768px){
+
+    .header{
+        flex-direction:column;
+        gap:15px;
+    }
+
+    .header h1{
+        font-size:20px;
+    }
+
+    .middle{
+        grid-template-columns:1fr;
+    }
+
+    .circle{
+        width:140px;
+        height:140px;
+    }
+
+    .circle::before{
+        width:105px;
+        height:105px;
+    }
+
 }
 </style>
 
