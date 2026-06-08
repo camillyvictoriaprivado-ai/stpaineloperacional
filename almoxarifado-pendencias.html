@@ -415,6 +415,13 @@ z-index:9999;
         <option value="TRATADA">Tratada</option>
     </select>
 
+        <select id="filtroPendencia" onchange="aplicarFiltros()">
+    <option value="">Todas Pendências</option>
+    <option value="1">Faltando 1</option>
+    <option value="2">Faltando 2</option>
+    <option value="3+">Faltando 3+</option>
+    </select>
+
     <button class="btn btn-red" onclick="toggleDuplicados()">
     Filtrar Duplicados
     </button>
@@ -558,10 +565,16 @@ function preencherFiltroCluster(){
 
 function aplicarFiltros(){
 
+                const resumoMap = {};
+               window.resumoID?.forEach(r => {
+               resumoMap[r.id] = r;
+               });
+
     const txtMaterial = document.getElementById("searchMaterial").value.toLowerCase();
     const txtID = document.getElementById("searchID").value.toLowerCase();
     const cluster = document.getElementById("filtroCluster").value;
     const status = document.getElementById("filtroStatus").value;
+    const filtroPendencia = document.getElementById("filtroPendencia").value;
 
     const idsDuplicados = getDuplicatedIds(dadosOriginais);
 
@@ -597,13 +610,27 @@ function aplicarFiltros(){
                 ? idsDuplicados.has(get(i,"id"))
                 : true;
 
+                const pendenciaID = resumoMap[get(i,"id")]?.faltam || 0;
+
+const okPendencia =
+    filtroPendencia === ""
+        ? true
+        : filtroPendencia === "1"
+            ? pendenciaID === 1
+            : filtroPendencia === "2"
+                ? pendenciaID === 2
+                : filtroPendencia === "3+"
+                    ? pendenciaID >= 3
+                    : true;
+
         return okText &&
-               okCluster &&
-               okStatus &&
-               okGraficoCluster &&
-               okGraficoMaterial &&
-               okGraficoStatus &&
-               okDuplicados;
+       okCluster &&
+       okStatus &&
+       okGraficoCluster &&
+       okGraficoMaterial &&
+       okGraficoStatus &&
+       okDuplicados &&
+       okPendencia;
     });
 
     renderTudo(dadosFiltrados);
