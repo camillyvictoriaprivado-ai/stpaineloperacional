@@ -23,6 +23,10 @@
     --danger:#e74c3c;
 }
 
+/* =========================
+   RESET BASE (SEM NEGRITO BUGADO)
+========================= */
+
 *{
     margin:0;
     padding:0;
@@ -33,21 +37,31 @@ body{
     font-family:'Montserrat',sans-serif;
     background:var(--bg);
     color:var(--text);
+    font-weight:400;
 }
 
-/* HEADER */
+/* garante consistência global */
+body *{
+    font-weight:400;
+}
+
+/* títulos continuam fortes */
+h1,h2,h3,h4,h5,h6,
+th{
+    font-weight:700;
+}
+
+/* =========================
+   HEADER
+========================= */
 
 .header{
     background:white;
-
     padding:18px 25px;
-
     display:flex;
     justify-content:space-between;
     align-items:center;
-
-    box-shadow:
-        0 2px 12px rgba(0,0,0,.05);
+    box-shadow:0 2px 12px rgba(0,0,0,.05);
 }
 
 .header h1{
@@ -56,21 +70,17 @@ body{
     font-weight:800;
 }
 
-/* BOTÕES */
+/* =========================
+   BOTÕES
+========================= */
 
 .btn{
     border:none;
-
     padding:11px 16px;
-
     border-radius:10px;
-
     cursor:pointer;
-
     font-family:'Montserrat',sans-serif;
-
     font-weight:600;
-
     transition:.25s;
 }
 
@@ -103,39 +113,28 @@ body{
     background:#c0392b;
 }
 
-/* KPIS */
+/* =========================
+   KPIS
+========================= */
 
 .kpis{
     display:grid;
-
-    grid-template-columns:
-        repeat(auto-fit,minmax(250px,1fr));
-
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
     gap:20px;
-
     padding:20px;
 }
 
 .kpi{
     background:white;
-
-    border:none;
-
     border-radius:18px;
-
     padding:22px;
-
-    box-shadow:
-        0 4px 15px rgba(0,0,0,.06);
-
+    box-shadow:0 4px 15px rgba(0,0,0,.06);
     transition:.25s;
 }
 
 .kpi:hover{
     transform:translateY(-3px);
-
-    box-shadow:
-        0 10px 25px rgba(0,0,0,.08);
+    box-shadow:0 10px 25px rgba(0,0,0,.08);
 }
 
 .kpi h3{
@@ -146,76 +145,116 @@ body{
 
 .kpi p{
     font-size:34px;
-
     margin-top:12px;
-
     color:var(--secondary);
-
     font-weight:800;
 }
 
-/* GRÁFICOS */
+/* =========================
+   GRÁFICOS
+========================= */
 
 .charts{
     display:grid;
-
-    grid-template-columns:
-        repeat(auto-fit,minmax(450px,1fr));
-
+    grid-template-columns:repeat(auto-fit,minmax(450px,1fr));
     gap:20px;
-
     padding:0 20px 20px;
 }
 
 .card-chart{
     background:white;
-
     padding:20px;
-
     border-radius:18px;
-
-    box-shadow:
-        0 4px 15px rgba(0,0,0,.06);
+    box-shadow:0 4px 15px rgba(0,0,0,.06);
 }
 
-/* FILTROS */
+/* =========================
+   FILTROS
+========================= */
 
 .filter{
     display:flex;
-
     flex-wrap:wrap;
-
     gap:12px;
-
     align-items:center;
-
     padding:0 20px 20px;
 }
+
+/* =========================
+   INPUTS
+========================= */
 
 input,
 select{
     padding:12px 14px;
-
     border:1px solid var(--border);
-
     border-radius:10px;
-
     font-family:'Montserrat',sans-serif;
-
     background:white;
 }
 
 input:focus,
 select:focus{
     outline:none;
-
     border-color:var(--primary);
-
-    box-shadow:
-        0 0 0 4px rgba(245,130,32,.12);
+    box-shadow:0 0 0 4px rgba(245,130,32,.12);
 }
 
-/* TABELA */
+/* =========================
+   MULTI SELECT (CORRIGIDO)
+========================= */
+
+.multi-select{
+    position:relative;
+    display:inline-block;
+}
+
+.multi-btn{
+    padding:12px 14px;
+    border-radius:10px;
+    border:1px solid #e6eaef;
+    background:white;
+    cursor:pointer;
+    font-weight:500;
+}
+
+.multi-dropdown{
+    display:none;
+    position:absolute;
+    top:110%;
+    left:0;
+    background:white;
+    border:1px solid #e6eaef;
+    border-radius:10px;
+    padding:8px;
+    min-width:180px;
+    box-shadow:0 10px 25px rgba(0,0,0,.1);
+    z-index:999;
+}
+
+/* 🔥 mata qualquer herança de negrito */
+.multi-dropdown,
+.multi-dropdown *{
+    font-weight:400 !important;
+    font-family:'Montserrat',sans-serif;
+    color:var(--text);
+}
+
+.multi-dropdown label{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:8px;
+    cursor:pointer;
+}
+
+.multi-dropdown label:hover{
+    background:#f4f6f9;
+}
+
+/* =========================
+   TABELA
+========================= */
 
 .table{
     padding:20px;
@@ -223,59 +262,47 @@ select:focus{
 
 table{
     width:100%;
-
     border-collapse:collapse;
-
     background:white;
-
     border-radius:16px;
-
     overflow:hidden;
-
-    box-shadow:
-        0 4px 15px rgba(0,0,0,.06);
+    box-shadow:0 4px 15px rgba(0,0,0,.06);
 }
 
 th{
     background:var(--secondary);
-
     color:white;
-
     padding:14px;
-
     text-align:left;
-
     font-weight:700;
 }
 
 td{
     padding:14px;
-
     border-bottom:1px solid var(--border);
 }
 
-tbody tr{
-    transition:.2s;
-}
-
 tbody tr:hover{
-    background:
-        rgba(245,130,32,.08);
+    background:rgba(245,130,32,.08);
 }
 
-/* STATUS */
+/* =========================
+   STATUS
+========================= */
 
 .status-aguardando{
     color:var(--primary);
-    font-weight:700;
+    font-weight:600;
 }
 
 .status-tratada{
     color:var(--success);
-    font-weight:700;
+    font-weight:600;
 }
 
-/* RESPONSIVO */
+/* =========================
+   RESPONSIVO
+========================= */
 
 @media(max-width:768px){
 
@@ -292,6 +319,33 @@ tbody tr:hover{
         font-size:28px;
     }
 
+    .chip-filter{
+        display:flex;
+        gap:10px;
+        flex-wrap:wrap;
+        padding:0 20px 10px;
+    }
+
+    .chip{
+        padding:10px 14px;
+        border-radius:20px;
+        border:1px solid #e6eaef;
+        background:white;
+        cursor:pointer;
+        font-weight:600;
+        transition:.2s;
+        user-select:none;
+    }
+
+    .chip:hover{
+        transform:scale(1.03);
+    }
+
+    .chip.active{
+        background:#f58220;
+        color:white;
+        border-color:#f58220;
+    }
 }
 </style>
 
@@ -415,12 +469,28 @@ z-index:9999;
         <option value="TRATADA">Tratada</option>
     </select>
 
-        <select id="filtroPendencia" onchange="aplicarFiltros()">
-    <option value="">Todas Pendências</option>
-    <option value="1">Faltando 1</option>
-    <option value="2">Faltando 2</option>
-    <option value="3+">Faltando 3+</option>
-    </select>
+<div class="multi-select">
+    <button type="button" class="multi-btn" onclick="toggleDropdown()">
+        Pendência ▾
+    </button>
+
+    <div id="dropdownPendencia" class="multi-dropdown">
+        <label>
+            <input type="checkbox" value="1" onchange="aplicarFiltros()">
+            Faltando 1
+        </label>
+
+        <label>
+            <input type="checkbox" value="2" onchange="aplicarFiltros()">
+            Faltando 2
+        </label>
+
+        <label>
+            <input type="checkbox" value="3+" onchange="aplicarFiltros()">
+            Faltando 3+
+        </label>
+    </div>
+</div>
 
     <button class="btn btn-red" onclick="toggleDuplicados()">
     Filtrar Duplicados
@@ -529,6 +599,11 @@ function agrupar(lista,campo){
     return m;
 }
 
+function toggleDropdown(){
+    const el = document.getElementById("dropdownPendencia");
+    el.style.display = el.style.display === "block" ? "none" : "block";
+}
+
  async function load(){
 
     const res = await fetch(API_URL + "?v=" + Date.now());
@@ -574,7 +649,9 @@ function aplicarFiltros(){
     const txtID = document.getElementById("searchID").value.toLowerCase();
     const cluster = document.getElementById("filtroCluster").value;
     const status = document.getElementById("filtroStatus").value;
-    const filtroPendencia = document.getElementById("filtroPendencia").value;
+const filtrosPendencia = Array.from(
+    document.querySelectorAll("#dropdownPendencia input:checked")
+).map(el => el.value);
 
     const idsDuplicados = getDuplicatedIds(dadosOriginais);
 
@@ -610,18 +687,18 @@ function aplicarFiltros(){
                 ? idsDuplicados.has(get(i,"id"))
                 : true;
 
-                const pendenciaID = resumoMap[get(i,"id")]?.faltam || 0;
+                const idAtual = get(i,"id");
+const pendenciaID = resumoMap?.[idAtual]?.faltam ?? 0;
 
 const okPendencia =
-    filtroPendencia === ""
+    filtrosPendencia.length === 0
         ? true
-        : filtroPendencia === "1"
-            ? pendenciaID === 1
-            : filtroPendencia === "2"
-                ? pendenciaID === 2
-                : filtroPendencia === "3+"
-                    ? pendenciaID >= 3
-                    : true;
+        : filtrosPendencia.some(f => {
+            if (f === "1") return pendenciaID === 1;
+            if (f === "2") return pendenciaID === 2;
+            if (f === "3+") return pendenciaID >= 3;
+            return false;
+        });
 
         return okText &&
        okCluster &&
