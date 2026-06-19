@@ -6,16 +6,30 @@
 <title>Portal Operacional ST</title>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root{
-    --primary:#f58220;
-    --secondary:#003a70;
-    --bg:#f4f6f9;
+    --primary:#4f46e5;
+    --primary-dark:#4338ca;
+    --secondary:#7c3aed;
+    --accent:#db2777;
+    --bg:#f1f5f9;
     --white:#ffffff;
-    --text:#222;
-    --text-light:#666;
-    --border:#e5e8ed;
+    --text:#0f172a;
+    --text-light:#6b7a99;
+    --text-faint:#94a3b8;
+    --border:#e2e8f0;
+    --border-light:#f1f5f9;
+
+    --emerald:#10b981;
+    --emerald-bg:#f0fdf4;
+    --emerald-text:#059669;
+    --amber:#f97316;
+    --amber-bg:#fffbeb;
+    --amber-text:#d97706;
+    --rose:#f43f5e;
+    --rose-bg:#fff1f2;
+    --rose-text:#e11d48;
 }
 
 *{
@@ -25,7 +39,7 @@
 }
 
 body{
-    font-family:'Montserrat',sans-serif;
+    font-family:'Inter',sans-serif;
     background:var(--bg);
     color:var(--text);
 }
@@ -41,9 +55,7 @@ body{
     align-items:center;
 
     background:var(--white);
-
-    box-shadow:
-        0 2px 12px rgba(0,0,0,.06);
+    border-bottom:1px solid var(--border-light);
 
     position:sticky;
     top:0;
@@ -51,35 +63,52 @@ body{
 }
 
 .header h1{
-    font-size:24px;
-    font-weight:800;
-    color:var(--secondary);
+    font-size:18px;
+    font-weight:900;
+    color:var(--text);
+    text-transform:uppercase;
+    letter-spacing:.06em;
+}
+
+.header h1::before{
+    content:"";
+    display:inline-block;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    margin-right:10px;
+    background:linear-gradient(135deg,var(--primary),var(--secondary));
+    vertical-align:middle;
 }
 
 /* BOTÕES */
 
 .btn{
-    background:var(--primary);
     color:white;
 
     border:none;
 
-    padding:12px 20px;
+    padding:11px 22px;
 
-    border-radius:8px;
+    border-radius:12px;
 
-    font-weight:700;
+    font-weight:800;
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
 
     cursor:pointer;
 
-    transition:.25s;
+    background:linear-gradient(135deg,var(--primary),var(--secondary));
+
+    box-shadow:0 4px 14px rgba(79,70,229,.25);
+
+    transition:.2s;
 }
 
 .btn:hover{
     transform:translateY(-2px);
-
-    box-shadow:
-        0 6px 15px rgba(245,130,32,.25);
+    box-shadow:0 8px 20px rgba(79,70,229,.35);
 }
 
 .btn:active{
@@ -89,7 +118,9 @@ body{
 /* CONTAINER */
 
 .container{
-    padding:25px;
+    padding:25px 30px 40px;
+    max-width:1400px;
+    margin:0 auto;
 }
 
 /* STATUS */
@@ -100,58 +131,98 @@ body{
     grid-template-columns:
         repeat(auto-fit,minmax(250px,1fr));
 
-    gap:20px;
+    gap:18px;
 
-    margin-bottom:25px;
+    margin-bottom:22px;
 }
 
 .box{
+    position:relative;
     background:white;
 
-    border-radius:16px;
+    border-radius:20px;
 
-    padding:25px;
+    padding:22px 24px;
 
-    border-left:5px solid var(--primary);
+    border:1px solid var(--border-light);
 
-    box-shadow:
-        0 4px 15px rgba(0,0,0,.05);
+    box-shadow:0 1px 3px rgba(15,23,42,.04);
 
-    transition:.25s;
+    transition:.2s;
+
+    overflow:hidden;
+}
+
+.box::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    height:4px;
+    background:var(--box-accent,linear-gradient(90deg,var(--primary),var(--secondary)));
 }
 
 .box:hover{
     transform:translateY(-3px);
-
-    box-shadow:
-        0 8px 20px rgba(0,0,0,.08);
+    box-shadow:0 12px 28px rgba(15,23,42,.08);
+    border-color:transparent;
 }
 
-.box span{
+.box .label{
+    display:block;
+    font-size:11px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.07em;
+    color:var(--text-faint);
+}
+
+.box span.value{
     display:block;
 
-    margin-top:12px;
+    margin-top:10px;
 
-    font-size:36px;
+    font-size:34px;
 
-    font-weight:800;
+    font-weight:900;
 
-    color:var(--secondary);
+    color:var(--text);
+
+    letter-spacing:-.02em;
 }
+
+.box.box-rose{ --box-accent:linear-gradient(90deg,var(--rose),#fb7185); }
+.box.box-rose .value{ color:var(--rose-text); }
+
+.box.box-amber{ --box-accent:linear-gradient(90deg,var(--amber),#fbbf24); }
+.box.box-amber .value{ color:var(--amber-text); }
+
+.box.box-emerald{ --box-accent:linear-gradient(90deg,var(--emerald),#34d399); }
+.box.box-emerald .value{ color:var(--emerald-text); }
 
 /* PROGRESSO */
 
+.progress-card{
+    background:white;
+    border-radius:20px;
+    padding:20px 24px;
+    border:1px solid var(--border-light);
+    box-shadow:0 1px 3px rgba(15,23,42,.04);
+    margin-bottom:28px;
+}
+
 .progress{
     width:100%;
-    height:14px;
+    height:12px;
 
-    background:#dfe5ec;
+    background:#eef1f6;
 
     border-radius:50px;
 
     overflow:hidden;
 
-    margin-bottom:15px;
+    margin-bottom:14px;
 }
 
 .bar{
@@ -166,40 +237,48 @@ body{
             var(--secondary)
         );
 
-    transition:.5s;
+    border-radius:50px;
+
+    transition:width .6s ease;
 }
 
 #percent{
-    margin-bottom:30px;
-
-    color:var(--secondary);
+    color:var(--text-light);
 
     font-weight:700;
 
-    font-size:15px;
+    font-size:13px;
+    letter-spacing:.01em;
+}
+
+#percent b{
+    color:var(--text);
+    font-weight:800;
 }
 
 /* TÍTULOS */
 
 .section-title{
-    margin:35px 0 20px;
+    margin:32px 0 16px;
 
-    padding:15px 20px;
+    display:flex;
+    align-items:center;
+    gap:10px;
 
-    background:white;
+    color:var(--text);
 
-    border-left:5px solid var(--primary);
+    font-size:13px;
 
-    border-radius:10px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+}
 
-    color:var(--secondary);
-
-    font-size:18px;
-
-    font-weight:700;
-
-    box-shadow:
-        0 3px 10px rgba(0,0,0,.04);
+.section-title::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--border);
 }
 
 /* GRID */
@@ -208,9 +287,9 @@ body{
     display:grid;
 
     grid-template-columns:
-        repeat(auto-fit,minmax(280px,1fr));
+        repeat(auto-fit,minmax(260px,1fr));
 
-    gap:20px;
+    gap:16px;
 
     margin-bottom:20px;
 }
@@ -220,43 +299,64 @@ body{
 .card{
     background:white;
 
-    padding:25px;
+    padding:22px;
 
-    border-radius:16px;
+    border-radius:18px;
 
     cursor:pointer;
 
-    border:1px solid var(--border);
+    border:1px solid var(--border-light);
 
-    transition:.25s;
+    transition:.2s;
 
-    box-shadow:
-        0 3px 10px rgba(0,0,0,.04);
+    box-shadow:0 1px 3px rgba(15,23,42,.04);
+
+    display:flex;
+    align-items:center;
+    gap:14px;
 }
 
 .card:hover{
     transform:translateY(-4px);
+    border-color:transparent;
+    box-shadow:0 14px 30px rgba(79,70,229,.12);
+}
 
-    border-color:var(--primary);
+.card:active{
+    transform:translateY(-1px) scale(.99);
+}
 
-    box-shadow:
-        0 10px 25px rgba(0,0,0,.08);
+.card-icon{
+    flex-shrink:0;
+    width:42px;
+    height:42px;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:18px;
+    background:linear-gradient(135deg,#eef2ff,#f5f3ff);
+    color:var(--primary);
+}
+
+.card-body{
+    min-width:0;
 }
 
 .card h3{
-    font-size:20px;
+    font-size:15px;
 
-    color:var(--secondary);
+    color:var(--text);
 
-    font-weight:700;
+    font-weight:800;
 
-    margin-bottom:8px;
+    margin-bottom:3px;
 }
 
 .card p{
     color:var(--text-light);
 
-    font-size:14px;
+    font-size:12.5px;
 
     font-weight:500;
 }
@@ -273,7 +373,7 @@ body{
     }
 
     .header h1{
-        font-size:20px;
+        font-size:15px;
         text-align:center;
     }
 
@@ -281,8 +381,8 @@ body{
         padding:15px;
     }
 
-    .box span{
-        font-size:30px;
+    .box span.value{
+        font-size:28px;
     }
 }
 </style>
@@ -315,75 +415,96 @@ checkLogin();
 <body>
 
 <div class="header">
-    <h1>PAINEL OPERACIONAL ST</h1>
-    <button class="btn" onclick="carregar()">ATUALIZAR</button>
+    <h1>Painel Operacional ST</h1>
+    <button class="btn" onclick="carregar()">Atualizar</button>
 </div>
 
 <div class="container">
 
     <div class="status">
 
-        <div class="box">
-            Aguardando Fechamento<br>
-            <span id="aguardandoFechamento">0</span>
+        <div class="box box-amber">
+            <span class="label">Aguardando Fechamento</span>
+            <span class="value" id="aguardandoFechamento">0</span>
         </div>
 
-        <div class="box">
-            Eps/Baixa de Material Incorreta<br>
-            <span id="eps">0</span>
+        <div class="box box-rose">
+            <span class="label">Eps / Baixa de Material Incorreta</span>
+            <span class="value" id="eps">0</span>
         </div>
 
-        <div class="box">
-            Supervisor Cidade<br>
-            <span id="concluidos">0</span>
+        <div class="box box-emerald">
+            <span class="label">Supervisor Cidade</span>
+            <span class="value" id="concluidos">0</span>
         </div>
 
     </div>
 
-    <div class="progress">
-        <div id="bar" class="bar"></div>
+    <div class="progress-card">
+        <div class="progress">
+            <div id="bar" class="bar"></div>
+        </div>
+        <p id="percent">0%</p>
     </div>
-
-    <p id="percent">0%</p>
 
     <h2 class="section-title">Manutenção Emergencial</h2>
 
     <div class="grid">
 
         <div class="card" onclick="go('dashboard.html')">
-            <h3>Dashboard</h3>
-            <p>Acompanhamento diário</p>
+            <div class="card-icon">📊</div>
+            <div class="card-body">
+                <h3>Dashboard</h3>
+                <p>Acompanhamento diário</p>
+            </div>
         </div>
 
         <div class="card" onclick="go('')">
-            <h3>Dashboard</h3>
-            <p>KPis estratégicos</p>
+            <div class="card-icon">📈</div>
+            <div class="card-body">
+                <h3>Dashboard</h3>
+                <p>KPis estratégicos</p>
+            </div>
         </div>
 
         <div class="card" onclick="go('almoxarifado-estoque.html')">
-            <h3>Almoxarifado</h3>
-            <p>Controle de estoque</p>
+            <div class="card-icon">📦</div>
+            <div class="card-body">
+                <h3>Almoxarifado</h3>
+                <p>Controle de estoque</p>
+            </div>
         </div>
 
         <div class="card" onclick="go('almoxarifado-pendencias.html')">
-            <h3>Almoxarifado</h3>
-            <p>Controle de pendências</p>
+            <div class="card-icon">📋</div>
+            <div class="card-body">
+                <h3>Almoxarifado</h3>
+                <p>Controle de pendências</p>
+            </div>
         </div>
 
     </div>
 
     <h2 class="section-title">Implantação/Manutenção</h2>
 
-<div class="grid">
+    <div class="grid">
 
-    <div class="card" onclick="go('draft-melhorias.html')">
-        <h3>Draft</h3>
-        <p>Melhorias de rede</p>
-    </div>
+        <div class="card" onclick="go('draft-melhorias.html')">
+            <div class="card-icon">🛠️</div>
+            <div class="card-body">
+                <h3>Draft</h3>
+                <p>Melhorias de rede</p>
+            </div>
+        </div>
 
-    <div class="card" onclick="go('draft-b2b.html')">
-        <h3>Draft</h3>
-        <p>B2B</p>
+        <div class="card" onclick="go('draft-b2b.html')">
+            <div class="card-icon">🏢</div>
+            <div class="card-body">
+                <h3>Draft</h3>
+                <p>B2B</p>
+            </div>
+        </div>
+
     </div>
 
 </div>
@@ -396,7 +517,7 @@ function go(page) {
     window.location.href = page;
 }
 
-// 🔥 ADICIONA ISSO (CORREÇÃO PRINCIPAL)
+// normaliza string para comparação (case/espaço-insensitive)
 function norm(v){
     return (v || "").toString().trim().toUpperCase();
 }
@@ -408,17 +529,24 @@ async function carregar() {
 
     const base = data.base || [];
 
-    const aguardandoFechamento =
-    base.filter(i => (i.status || "").trim() === "Aguardando Fechamento").length;
-
-    const supervisorCidade = new Set(
-    base
-        .filter(i => (i.status || "").trim() === "Supervisor Cidade")
-        .map(i => i.id)
+    // id é duplicado por linha -> usar Set para contar únicos
+    const aguardandoFechamento = new Set(
+        base
+            .filter(i => norm(i.status) === norm("Aguardando Fechamento"))
+            .map(i => i.id)
     ).size;
 
-    const eps =
-    base.filter(i => (i.status || "").trim() === "EPS").length;
+    const supervisorCidade = new Set(
+        base
+            .filter(i => norm(i.status) === norm("Supervisor Cidade"))
+            .map(i => i.id)
+    ).size;
+
+    const eps = new Set(
+        base
+            .filter(i => norm(i.status) === norm("Eps/Baixa de Material Incorreta"))
+            .map(i => i.id)
+    ).size;
 
     document.getElementById("aguardandoFechamento").innerText =
     aguardandoFechamento;
@@ -468,15 +596,14 @@ const percent = Math.min(
     100
 );
 
-document.getElementById("percent").innerText =
-`Atual: ${idsUnicos} | Previsão: ${previsaoMes} | Faltam: ${faltam}`;
+document.getElementById("percent").innerHTML =
+`Atual: <b>${idsUnicos}</b> &nbsp;|&nbsp; Previsão: <b>${previsaoMes}</b> &nbsp;|&nbsp; Faltam: <b>${faltam}</b>`;
 
 document.getElementById("bar").style.width =
 percent + "%";
 
 }
 
-/* 🔥 ISSO AQUI É O QUE FALTAVA */
 carregar();
 
 </script>
