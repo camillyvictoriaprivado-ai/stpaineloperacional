@@ -9,18 +9,22 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root{
-    --primary:#f58220;
-    --primary-light:#ff9f43;
-    --secondary:#003a70;
-    --bg:#f4f6f9;
+    --indigo:#4f46e5;
+    --violet:#7c3aed;
+    --pink:#db2777;
+    --orange:#f97316;
+    --navy:#0f172a;
+    --bg:#f1f5f9;
     --white:#ffffff;
-    --text:#222;
-    --border:#e6eaef;
-    --success:#2ecc71;
-    --danger:#e74c3c;
+    --text:#0f172a;
+    --muted:#64748b;
+    --border:#e2e8f0;
+    --border-light:#f1f5f9;
+    --success:#10b981;
+    --danger:#f43f5e;
 }
 
 /* =========================
@@ -34,10 +38,11 @@
 }
 
 body{
-    font-family:'Montserrat',sans-serif;
+    font-family:'Inter',sans-serif;
     background:var(--bg);
     color:var(--text);
     font-weight:400;
+    -webkit-font-smoothing:antialiased;
 }
 
 /* garante consistência global */
@@ -57,17 +62,22 @@ th{
 
 .header{
     background:white;
-    padding:18px 25px;
+    padding:0 24px;
+    height:64px;
     display:flex;
     justify-content:space-between;
     align-items:center;
-    box-shadow:0 2px 12px rgba(0,0,0,.05);
+    box-shadow:0 1px 0 var(--border);
+    position:sticky;
+    top:0;
+    z-index:20;
 }
 
 .header h1{
-    color:var(--secondary);
-    font-size:24px;
+    color:var(--navy);
+    font-size:16px;
     font-weight:800;
+    letter-spacing:.01em;
 }
 
 /* =========================
@@ -76,31 +86,36 @@ th{
 
 .btn{
     border:none;
-    padding:11px 16px;
-    border-radius:10px;
+    padding:10px 16px;
+    border-radius:12px;
     cursor:pointer;
-    font-family:'Montserrat',sans-serif;
-    font-weight:600;
-    transition:.25s;
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    font-weight:700;
+    transition:.2s ease;
 }
 
 .btn-dark-custom{
-    background:var(--secondary);
-    color:white;
+    background:var(--bg);
+    color:var(--text);
+    border:1px solid var(--border);
 }
 
 .btn-dark-custom:hover{
-    background:#004d91;
+    border-color:var(--indigo);
+    color:var(--indigo);
 }
 
 .btn-yellow{
-    background:var(--primary);
+    background:linear-gradient(135deg,var(--indigo),var(--violet));
     color:white;
     font-weight:700;
+    box-shadow:0 4px 12px rgba(79,70,229,.25);
 }
 
 .btn-yellow:hover{
-    background:var(--primary-light);
+    opacity:.92;
+    transform:translateY(-1px);
 }
 
 .btn-red{
@@ -110,7 +125,7 @@ th{
 }
 
 .btn-red:hover{
-    background:#c0392b;
+    background:#e11d48;
 }
 
 /* =========================
@@ -120,34 +135,38 @@ th{
 .kpis{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-    gap:20px;
-    padding:20px;
+    gap:16px;
+    padding:24px 24px 0;
 }
 
 .kpi{
     background:white;
-    border-radius:18px;
-    padding:22px;
-    box-shadow:0 4px 15px rgba(0,0,0,.06);
-    transition:.25s;
+    border:1px solid var(--border-light);
+    border-radius:20px;
+    padding:20px 22px;
+    box-shadow:0 1px 2px rgba(15,23,42,.04);
+    transition:.2s ease;
 }
 
 .kpi:hover{
-    transform:translateY(-3px);
-    box-shadow:0 10px 25px rgba(0,0,0,.08);
+    transform:translateY(-2px);
+    box-shadow:0 10px 24px rgba(15,23,42,.08);
+    border-color:transparent;
 }
 
 .kpi h3{
-    color:#666;
-    font-size:14px;
-    font-weight:600;
+    color:var(--muted);
+    font-size:11px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.05em;
 }
 
 .kpi p{
-    font-size:34px;
+    font-size:30px;
     margin-top:12px;
-    color:var(--secondary);
-    font-weight:800;
+    color:var(--navy);
+    font-weight:900;
 }
 
 /* =========================
@@ -157,15 +176,16 @@ th{
 .charts{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(450px,1fr));
-    gap:20px;
-    padding:0 20px 20px;
+    gap:16px;
+    padding:0 24px 24px;
 }
 
 .card-chart{
     background:white;
-    padding:20px;
-    border-radius:18px;
-    box-shadow:0 4px 15px rgba(0,0,0,.06);
+    padding:22px;
+    border-radius:20px;
+    box-shadow:0 1px 2px rgba(15,23,42,.04);
+    border:1px solid var(--border-light);
 }
 
 /* =========================
@@ -177,7 +197,7 @@ th{
     flex-wrap:wrap;
     gap:12px;
     align-items:center;
-    padding:0 20px 20px;
+    padding:0 24px 24px;
 }
 
 /* =========================
@@ -188,16 +208,18 @@ input,
 select{
     padding:12px 14px;
     border:1px solid var(--border);
-    border-radius:10px;
-    font-family:'Montserrat',sans-serif;
+    border-radius:12px;
+    font-family:'Inter',sans-serif;
+    font-size:13px;
     background:white;
+    color:var(--text);
 }
 
 input:focus,
 select:focus{
     outline:none;
-    border-color:var(--primary);
-    box-shadow:0 0 0 4px rgba(245,130,32,.12);
+    border-color:var(--indigo);
+    box-shadow:0 0 0 4px rgba(79,70,229,.12);
 }
 
 /* =========================
@@ -211,11 +233,12 @@ select:focus{
 
 .multi-btn{
     padding:12px 14px;
-    border-radius:10px;
-    border:1px solid #e6eaef;
+    border-radius:12px;
+    border:1px solid var(--border);
     background:white;
     cursor:pointer;
     font-weight:500;
+    font-size:13px;
 }
 
 .multi-dropdown{
@@ -224,11 +247,11 @@ select:focus{
     top:110%;
     left:0;
     background:white;
-    border:1px solid #e6eaef;
-    border-radius:10px;
+    border:1px solid var(--border);
+    border-radius:12px;
     padding:8px;
     min-width:180px;
-    box-shadow:0 10px 25px rgba(0,0,0,.1);
+    box-shadow:0 10px 25px rgba(15,23,42,.1);
     z-index:999;
 }
 
@@ -236,7 +259,7 @@ select:focus{
 .multi-dropdown,
 .multi-dropdown *{
     font-weight:400 !important;
-    font-family:'Montserrat',sans-serif;
+    font-family:'Inter',sans-serif;
     color:var(--text);
 }
 
@@ -246,10 +269,11 @@ select:focus{
     gap:8px;
     padding:8px;
     cursor:pointer;
+    border-radius:8px;
 }
 
 .multi-dropdown label:hover{
-    background:#f4f6f9;
+    background:var(--bg);
 }
 
 /* =========================
@@ -257,7 +281,7 @@ select:focus{
 ========================= */
 
 .table{
-    padding:20px;
+    padding:0 24px 24px;
 }
 
 table{
@@ -266,24 +290,29 @@ table{
     background:white;
     border-radius:16px;
     overflow:hidden;
-    box-shadow:0 4px 15px rgba(0,0,0,.06);
+    box-shadow:0 1px 2px rgba(15,23,42,.04);
+    border:1px solid var(--border-light);
 }
 
 th{
-    background:var(--secondary);
+    background:var(--navy);
     color:white;
     padding:14px;
     text-align:left;
     font-weight:700;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
 }
 
 td{
     padding:14px;
-    border-bottom:1px solid var(--border);
+    border-bottom:1px solid var(--border-light);
+    font-size:13px;
 }
 
 tbody tr:hover{
-    background:rgba(245,130,32,.08);
+    background:rgba(79,70,229,.06);
 }
 
 /* =========================
@@ -291,7 +320,7 @@ tbody tr:hover{
 ========================= */
 
 .status-aguardando{
-    color:var(--primary);
+    color:var(--orange);
     font-weight:600;
 }
 
@@ -307,29 +336,39 @@ tbody tr:hover{
 @media(max-width:768px){
 
     .header{
-        flex-direction:column;
-        gap:15px;
+        padding:0 16px;
+    }
+
+    .header h1{
+        font-size:14px;
     }
 
     .charts{
         grid-template-columns:1fr;
     }
 
+    .kpis,
+    .filter,
+    .table{
+        padding-left:16px;
+        padding-right:16px;
+    }
+
     .kpi p{
-        font-size:28px;
+        font-size:26px;
     }
 
     .chip-filter{
         display:flex;
         gap:10px;
         flex-wrap:wrap;
-        padding:0 20px 10px;
+        padding:0 16px 10px;
     }
 
     .chip{
         padding:10px 14px;
         border-radius:20px;
-        border:1px solid #e6eaef;
+        border:1px solid var(--border);
         background:white;
         cursor:pointer;
         font-weight:600;
@@ -342,9 +381,9 @@ tbody tr:hover{
     }
 
     .chip.active{
-        background:#f58220;
+        background:var(--indigo);
         color:white;
-        border-color:#f58220;
+        border-color:var(--indigo);
     }
 }
 </style>
@@ -354,11 +393,14 @@ tbody tr:hover{
 <body>
 
 <div class="header">
-    <h1>CONTROLE DE PENDÊNCIAS</h1>
+    <div style="display:flex;align-items:center;gap:14px;">
+        <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--orange),var(--indigo));color:white;font-weight:900;font-size:11px;">TLP</div>
+        <h1>Controle de Pendências</h1>
+    </div>
 
     <div>
         <button class="btn btn-dark-custom" onclick="window.location.href='painel.html'">← Voltar ao Painel</button>
-        <button class="btn btn-yellow" onclick="exportarExcel()">EXPORTAR EXCEL</button>
+        <button class="btn btn-yellow" onclick="exportarExcel()">Exportar Excel</button>
     </div>
 </div>
 
@@ -750,7 +792,7 @@ chartStatus = new Chart(document.getElementById("statusChart"),{
         labels:["Aguardando","Tratadas"],
         datasets:[{
             data:[ag,tr],
-            backgroundColor:["#ff7a00","#2ecc71"]
+            backgroundColor:["#f97316","#10b981"]
         }]
     },
     options:{
@@ -786,7 +828,8 @@ chartCluster = new Chart(document.getElementById("clusterChart"),{
         datasets:[{
             label:"Clusters",
             data:Object.values(cluster),
-            backgroundColor:"#111"
+            backgroundColor:"#4f46e5",
+            borderRadius:6
         }]
     },
     options:{
@@ -820,7 +863,8 @@ chartMaterial = new Chart(document.getElementById("materialChart"),{
         datasets:[{
             label:"Material Ofensor",
             data:Object.values(material),
-            backgroundColor:"#ff7a00"
+            backgroundColor:"#7c3aed",
+            borderRadius:6
         }]
     },
     options:{
@@ -885,10 +929,10 @@ function render(lista){
         const concluido = pend ? pend.concluido : false;
 
         tbody.innerHTML += `
-        <tr style="${isDup ? 'background:#ffe5e5;' : ''}">
+        <tr style="${isDup ? 'background:#fff1f2;' : ''}">
             
             <td 
-                style="cursor:pointer; ${isDup ? 'color:#d60000;font-weight:bold;' : ''}"
+                style="cursor:pointer; ${isDup ? 'color:#e11d48;font-weight:bold;' : ''}"
                 onclick="verMateriaisDoID('${idAtual}')"
             >
                 ${idAtual}
@@ -904,7 +948,7 @@ function render(lista){
 
             <td style="
                 font-weight:bold;
-                color:${concluido ? '#2ecc71' : '#ff7a00'};
+                color:${concluido ? '#10b981' : '#f97316'};
             ">
                 ${faltando} faltando
             </td>

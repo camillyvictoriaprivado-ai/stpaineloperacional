@@ -9,18 +9,22 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root{
-    --primary:#f58220;
-    --primary-light:#ff9f43;
-    --secondary:#003a70;
-    --bg:#f4f6f9;
+    --indigo:#4f46e5;
+    --violet:#7c3aed;
+    --pink:#db2777;
+    --orange:#f97316;
+    --navy:#0f172a;
+    --bg:#f1f5f9;
     --white:#ffffff;
-    --text:#222;
-    --border:#e6eaef;
-    --success:#2ecc71;
-    --danger:#e74c3c;
+    --text:#0f172a;
+    --muted:#64748b;
+    --border:#e2e8f0;
+    --border-light:#f1f5f9;
+    --success:#10b981;
+    --danger:#f43f5e;
 }
 
 *{
@@ -31,8 +35,9 @@
 
 body{
     background:var(--bg);
-    font-family:'Montserrat',sans-serif;
+    font-family:'Inter',sans-serif;
     color:var(--text);
+    -webkit-font-smoothing:antialiased;
 }
 
 /* HEADER */
@@ -40,20 +45,25 @@ body{
 .header{
     background:white;
 
-    padding:18px 25px;
+    padding:0 24px;
+    height:64px;
 
     display:flex;
     justify-content:space-between;
     align-items:center;
 
-    box-shadow:
-        0 2px 12px rgba(0,0,0,.05);
+    box-shadow:0 1px 0 var(--border);
+
+    position:sticky;
+    top:0;
+    z-index:20;
 }
 
 .header h1{
-    color:var(--secondary);
-    font-size:24px;
+    color:var(--navy);
+    font-size:16px;
     font-weight:800;
+    letter-spacing:.01em;
 }
 
 /* BOTÕES */
@@ -61,36 +71,42 @@ body{
 .btn{
     border:none;
 
-    padding:11px 16px;
+    padding:10px 16px;
 
-    border-radius:10px;
+    border-radius:12px;
 
     cursor:pointer;
 
-    font-family:'Montserrat',sans-serif;
+    font-family:'Inter',sans-serif;
 
-    font-weight:600;
+    font-size:13px;
 
-    transition:.25s;
+    font-weight:700;
+
+    transition:.2s ease;
 }
 
 .btn-dark-custom{
-    background:var(--secondary);
-    color:white;
+    background:var(--bg);
+    color:var(--text);
+    border:1px solid var(--border);
 }
 
 .btn-dark-custom:hover{
-    background:#004d91;
+    border-color:var(--indigo);
+    color:var(--indigo);
 }
 
 .btn-yellow{
-    background:var(--primary);
+    background:linear-gradient(135deg,var(--indigo),var(--violet));
     color:white;
     font-weight:700;
+    box-shadow:0 4px 12px rgba(79,70,229,.25);
 }
 
 .btn-yellow:hover{
-    background:var(--primary-light);
+    opacity:.92;
+    transform:translateY(-1px);
 }
 
 /* KPIS */
@@ -101,47 +117,49 @@ body{
     grid-template-columns:
         repeat(auto-fit,minmax(220px,1fr));
 
-    gap:20px;
+    gap:16px;
 
-    padding:20px;
+    padding:24px 24px 0;
 }
 
 .kpi{
     background:white;
 
-    border:none;
+    border:1px solid var(--border-light);
 
-    border-radius:18px;
+    border-radius:20px;
 
-    padding:22px;
+    padding:20px 22px;
 
-    box-shadow:
-        0 4px 15px rgba(0,0,0,.06);
+    box-shadow:0 1px 2px rgba(15,23,42,.04);
 
-    transition:.25s;
+    transition:.2s ease;
 }
 
 .kpi:hover{
-    transform:translateY(-3px);
+    transform:translateY(-2px);
 
-    box-shadow:
-        0 10px 25px rgba(0,0,0,.08);
+    box-shadow:0 10px 24px rgba(15,23,42,.08);
+
+    border-color:transparent;
 }
 
 .kpi h3{
-    color:#666;
-    font-size:14px;
-    font-weight:600;
+    color:var(--muted);
+    font-size:11px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.05em;
 }
 
 .kpi p{
-    font-size:34px;
+    font-size:30px;
 
     margin-top:12px;
 
-    color:var(--secondary);
+    color:var(--navy);
 
-    font-weight:800;
+    font-weight:900;
 }
 
 /* FILTROS */
@@ -153,7 +171,7 @@ body{
 
     gap:12px;
 
-    padding:0 20px 20px;
+    padding:20px 24px;
 }
 
 input,
@@ -162,21 +180,25 @@ select{
 
     border:1px solid var(--border);
 
-    border-radius:10px;
+    border-radius:12px;
 
     background:white;
 
-    font-family:'Montserrat',sans-serif;
+    font-family:'Inter',sans-serif;
+
+    font-size:13px;
+
+    color:var(--text);
 }
 
 input:focus,
 select:focus{
     outline:none;
 
-    border-color:var(--primary);
+    border-color:var(--indigo);
 
     box-shadow:
-        0 0 0 4px rgba(245,130,32,.12);
+        0 0 0 4px rgba(79,70,229,.12);
 }
 
 /* CHARTS */
@@ -187,32 +209,44 @@ select:focus{
     grid-template-columns:
         repeat(auto-fit,minmax(450px,1fr));
 
-    gap:20px;
+    gap:16px;
 
-    padding:0 20px 20px;
+    padding:0 24px 24px;
 }
 
 .card{
     background:white;
 
-    border:none;
+    border:1px solid var(--border-light);
 
-    border-radius:18px;
+    border-radius:20px;
 
-    padding:20px;
+    padding:22px;
 
-    box-shadow:
-        0 4px 15px rgba(0,0,0,.06);
+    box-shadow:0 1px 2px rgba(15,23,42,.04);
 }
 
 .card h4{
-    margin-bottom:15px;
+    margin-bottom:16px;
 
-    color:var(--secondary);
+    color:var(--navy);
 
-    font-size:15px;
+    font-size:14px;
 
-    font-weight:700;
+    font-weight:800;
+
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.card h4::before{
+    content:"";
+    width:4px;
+    height:14px;
+    border-radius:4px;
+    background:linear-gradient(180deg,var(--indigo),var(--violet));
+    display:inline-block;
 }
 
 /* GRÁFICO PRINCIPAL */
@@ -230,7 +264,7 @@ select:focus{
 /* TABELA */
 
 .table{
-    padding:20px;
+    padding:0 24px 24px;
 }
 
 table{
@@ -244,12 +278,13 @@ table{
 
     overflow:hidden;
 
-    box-shadow:
-        0 4px 15px rgba(0,0,0,.06);
+    box-shadow:0 1px 2px rgba(15,23,42,.04);
+
+    border:1px solid var(--border-light);
 }
 
 th{
-    background:var(--secondary);
+    background:var(--navy);
 
     color:white;
 
@@ -258,21 +293,27 @@ th{
     text-align:left;
 
     font-weight:700;
+
+    font-size:12px;
+
+    text-transform:uppercase;
+    letter-spacing:.04em;
 }
 
 td{
     padding:14px;
 
-    border-bottom:1px solid var(--border);
+    border-bottom:1px solid var(--border-light);
+
+    font-size:13px;
 }
 
 tbody tr{
-    transition:.2s;
+    transition:.15s;
 }
 
 tbody tr:hover{
-    background:
-        rgba(245,130,32,.08);
+    background:rgba(79,70,229,.06);
 }
 
 /* STATUS */
@@ -309,12 +350,23 @@ tbody tr:hover{
 @media(max-width:768px){
 
     .header{
-        flex-direction:column;
-        gap:15px;
+        padding:0 16px;
+    }
+
+    .header h1{
+        font-size:14px;
+    }
+
+    .kpis,
+    .filters,
+    .charts,
+    .table{
+        padding-left:16px;
+        padding-right:16px;
     }
 
     .kpi p{
-        font-size:28px;
+        font-size:26px;
     }
 
 }
@@ -324,11 +376,14 @@ tbody tr:hover{
 <body>
 
 <div class="header">
-    <h1>CONTROLE DE ALMOXARIFADO</h1>
+    <div style="display:flex;align-items:center;gap:14px;">
+        <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--orange),var(--indigo));color:white;font-weight:900;font-size:11px;">TLP</div>
+        <h1>Controle de Almoxarifado</h1>
+    </div>
 
     <div>
         <button class="btn btn-dark-custom" onclick="window.location.href='painel.html'">← Voltar ao Painel</button>
-        <button class="btn btn-yellow" onclick="exportarExcel()">EXPORTAR</button>
+        <button class="btn btn-yellow" onclick="exportarExcel()">Exportar</button>
     </div>
 </div>
 
@@ -624,11 +679,11 @@ function charts(){
             datasets:[{
                 data:Object.values(cluster),
                 backgroundColor:[
-                    "#ff7a00",
-                    "#111",
-                    "#2ecc71",
-                    "#ff3b30",
-                    "#3498db"
+                    "#4f46e5",
+                    "#7c3aed",
+                    "#db2777",
+                    "#f97316",
+                    "#10b981"
                 ]
             }]
         },
@@ -664,7 +719,9 @@ function charts(){
             datasets:[{
                 label:"Estoque",
                 data:Object.values(estoque),
-                backgroundColor:"#ff7a00"
+                backgroundColor:"#4f46e5",
+                borderRadius:8,
+                maxBarThickness:48
             }]
         },
         options:{
@@ -704,9 +761,10 @@ function charts(){
             datasets:[{
                 label:"Qtd de IDs",
                 data:top.map(i=>i[1]),
-                backgroundColor:"#ff7a00",
-                borderColor:"#d96600",
-                borderWidth:1
+                backgroundColor:"#7c3aed",
+                borderColor:"#5b21b6",
+                borderWidth:1,
+                borderRadius:6
             }]
         },
         options:{
@@ -756,7 +814,8 @@ c4 = new Chart(document.getElementById("chartCentro"),{
         datasets:[{
             label:"Quantidade de Itens",
             data: centrosOrdenados.map(i => i[1]),
-            backgroundColor:"#111"
+            backgroundColor:"#0f172a",
+            borderRadius:6
         }]
     },
     options:{

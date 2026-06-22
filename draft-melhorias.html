@@ -11,22 +11,27 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root{
-    --primary:#f58220;
-    --primary-light:#ff9f43;
-    --secondary:#003a70;
-    --bg:#f4f6f9;
+    --indigo:#4f46e5;
+    --violet:#7c3aed;
+    --pink:#db2777;
+    --orange:#f97316;
+    --navy:#0f172a;
+    --bg:#f1f5f9;
     --white:#ffffff;
-    --text:#222;
-    --border:#e6eaef;
+    --text:#0f172a;
+    --muted:#64748b;
+    --border:#e2e8f0;
+    --border-light:#f1f5f9;
 }
 
 body{
     background:var(--bg);
-    font-family:'Montserrat',sans-serif;
+    font-family:'Inter',sans-serif;
     color:var(--text);
+    -webkit-font-smoothing:antialiased;
 }
 
 /* KPI CARDS */
@@ -34,31 +39,31 @@ body{
 .card-kpi{
     background:var(--white);
 
-    border:none;
+    border:1px solid var(--border-light);
 
-    border-radius:18px;
+    border-radius:20px;
 
     padding:10px;
 
-    box-shadow:
-        0 4px 15px rgba(0,0,0,.06);
+    box-shadow:0 1px 2px rgba(15,23,42,.04);
 
-    transition:.25s;
+    transition:.2s ease;
 }
 
 .card-kpi:hover{
-    transform:translateY(-3px);
+    transform:translateY(-2px);
 
-    box-shadow:
-        0 10px 25px rgba(0,0,0,.08);
+    box-shadow:0 10px 24px rgba(15,23,42,.08);
+
+    border-color:transparent;
 }
 
 .kpi-value{
-    font-size:34px;
+    font-size:30px;
 
-    font-weight:800;
+    font-weight:900;
 
-    color:var(--secondary);
+    color:var(--navy);
 }
 
 /* CHARTS */
@@ -66,14 +71,13 @@ body{
 .chart-card{
     background:var(--white);
 
-    border:none;
+    border:1px solid var(--border-light);
 
-    border-radius:18px;
+    border-radius:20px;
 
-    padding:20px;
+    padding:22px;
 
-    box-shadow:
-        0 4px 15px rgba(0,0,0,.06);
+    box-shadow:0 1px 2px rgba(15,23,42,.04);
 }
 
 .chart-container{
@@ -88,13 +92,26 @@ canvas{
 /* TITULOS */
 
 h2{
-    color:var(--secondary);
-    font-weight:800;
+    color:var(--navy);
+    font-weight:900;
 }
 
 h5{
-    color:var(--secondary);
-    font-weight:700;
+    color:var(--navy);
+    font-weight:800;
+    font-size:14px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+h5::before{
+    content:"";
+    width:4px;
+    height:14px;
+    border-radius:4px;
+    background:linear-gradient(180deg,var(--indigo),var(--violet));
+    display:inline-block;
 }
 
 /* TABELAS */
@@ -106,52 +123,64 @@ h5{
 }
 
 .table thead th{
-    background:var(--secondary) !important;
+    background:var(--navy) !important;
     color:white;
 
     border:none;
 
     font-weight:700;
+
+    font-size:12px;
+
+    text-transform:uppercase;
+    letter-spacing:.04em;
 }
 
 .table tbody td{
     vertical-align:middle;
+
+    font-size:13px;
 }
 
 .table tbody tr{
-    transition:.2s;
+    transition:.15s;
 }
 
 .table tbody tr:hover{
-    background:
-        rgba(245,130,32,.08);
+    background:rgba(79,70,229,.06);
 }
 
 /* BOTÕES */
 
 .btn-dark{
-    background:var(--secondary);
-    border:none;
+    background:var(--bg);
+    border:1px solid var(--border);
 
-    font-weight:600;
+    color:var(--text);
+
+    font-weight:700;
 }
 
 .btn-dark:hover{
-    background:#004d91;
+    border-color:var(--indigo);
+    color:var(--indigo);
 }
 
 .btn-warning{
-    background:var(--primary);
+    background:linear-gradient(135deg,var(--indigo),var(--violet));
 
     border:none;
 
     color:white;
 
     font-weight:700;
+
+    box-shadow:0 4px 12px rgba(79,70,229,.25);
 }
 
 .btn-warning:hover{
-    background:var(--primary-light);
+    opacity:.92;
+    color:white;
 }
 
 /* FILTROS E INPUTS */
@@ -160,17 +189,18 @@ h5{
 .form-select{
     border:1px solid var(--border);
 
-    border-radius:10px;
+    border-radius:12px;
 
     padding:10px 14px;
+
+    font-size:13px;
 }
 
 .form-control:focus,
 .form-select:focus{
-    border-color:var(--primary);
+    border-color:var(--indigo);
 
-    box-shadow:
-        0 0 0 4px rgba(245,130,32,.12);
+    box-shadow:0 0 0 4px rgba(79,70,229,.12);
 }
 
 /* BADGES */
@@ -186,12 +216,13 @@ h5{
 .section-card{
     background:white;
 
-    border-radius:18px;
+    border-radius:20px;
 
     padding:20px;
 
-    box-shadow:
-        0 4px 15px rgba(0,0,0,.06);
+    border:1px solid var(--border-light);
+
+    box-shadow:0 1px 2px rgba(15,23,42,.04);
 }
 
 /* RESPONSIVO */
@@ -199,7 +230,7 @@ h5{
 @media(max-width:768px){
 
     .kpi-value{
-        font-size:28px;
+        font-size:26px;
     }
 
     .chart-container{
@@ -215,7 +246,10 @@ h5{
 
 <div class="container-fluid p-4">
 
-<h2 class="mb-4">Dashboard Melhorias (GPON / Rede)</h2>
+<div class="d-flex align-items-center gap-3 mb-4">
+    <div style="width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--orange),var(--indigo));color:white;font-weight:900;font-size:11px;">TLP</div>
+    <h2 class="mb-0">Dashboard Melhorias (GPON / Rede)</h2>
+</div>
 
 <div class="d-flex justify-content-end gap-2 mb-3">
     <a href="painel.html" class="btn btn-dark px-4">← Voltar ao Painel</a>
@@ -470,13 +504,13 @@ function montarGraficos(dados){
         datasets:[{
             data:Object.values(empresa),
             backgroundColor:[
-                "#ff7a00",
-                "#111",
-                "#ffcc00",
-                "#28a745",
-                "#dc3545",
-                "#6f42c1",
-                "#17a2b8"
+                "#4f46e5",
+                "#7c3aed",
+                "#db2777",
+                "#f97316",
+                "#10b981",
+                "#0f172a",
+                "#0ea5e9"
             ]
         }]
     },
@@ -512,7 +546,8 @@ chartArmario = new Chart(document.getElementById("armarioChart"), {
         labels:Object.keys(armario),
         datasets:[{
             data:Object.values(armario),
-            backgroundColor:"#111"
+            backgroundColor:"#4f46e5",
+            borderRadius:6
         }]
     },
     options:{
@@ -551,12 +586,12 @@ chartStatusCampo = new Chart(
             datasets:[{
                 data:Object.values(status),
                 backgroundColor:[
-                    "#ff7a00",
-                    "#111",
-                    "#ffcc00",
-                    "#28a745",
-                    "#dc3545",
-                    "#6f42c1"
+                    "#4f46e5",
+                    "#7c3aed",
+                    "#db2777",
+                    "#f97316",
+                    "#10b981",
+                    "#0f172a"
                 ]
             }]
         },
@@ -596,7 +631,8 @@ chartCluster = new Chart(
             labels:Object.keys(cluster),
             datasets:[{
                 data:Object.values(cluster),
-                backgroundColor:"#111"
+                backgroundColor:"#0f172a",
+                borderRadius:6
             }]
         },
         options:{
@@ -654,7 +690,8 @@ chartCusto = new Chart(
             labels:Object.keys(custo),
             datasets:[{
                 data:Object.values(custo),
-                backgroundColor:"#ff7a00"
+                backgroundColor:"#f97316",
+                borderRadius:6
             }]
         },
         options:{

@@ -6,12 +6,12 @@
 <title>Login - Dashboard</title>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root{
-    --primary:#f58220;
-    --primary-light:#ff9f43;
-    --secondary:#003a70;
+    --indigo:#4f46e5;
+    --violet:#7c3aed;
+    --pink:#db2777;
     --white:#ffffff;
 }
 
@@ -22,7 +22,7 @@
 }
 
 body{
-    font-family:'Montserrat',sans-serif;
+    font-family:'Inter',sans-serif;
 
     min-height:100vh;
 
@@ -35,13 +35,13 @@ body{
     background:
         radial-gradient(
             circle at top left,
-            rgba(245,130,32,.18),
+            rgba(124,58,237,.22),
             transparent 35%
         ),
 
         radial-gradient(
             circle at bottom right,
-            rgba(0,58,112,.45),
+            rgba(79,70,229,.45),
             transparent 40%
         ),
 
@@ -105,22 +105,6 @@ body::before{
     z-index:1;
 }
 
-.logo{
-    text-align:center;
-    margin-bottom:30px;
-}
-
-.logo img{
-    width:220px;
-    max-width:100%;
-    height:auto;
-
-    filter:
-        drop-shadow(
-            0 10px 20px rgba(0,0,0,.35)
-        );
-}
-
 h2{
     text-align:center;
 
@@ -128,7 +112,7 @@ h2{
 
     font-size:24px;
 
-    font-weight:700;
+    font-weight:800;
 
     margin-bottom:30px;
 }
@@ -151,6 +135,8 @@ input{
 
     font-size:15px;
 
+    font-family:'Inter',sans-serif;
+
     transition:.25s;
 }
 
@@ -165,7 +151,7 @@ input:focus{
         rgba(255,255,255,.12);
 
     box-shadow:
-        0 0 0 2px rgba(245,130,32,.5);
+        0 0 0 2px rgba(124,58,237,.55);
 }
 
 button{
@@ -180,8 +166,8 @@ button{
     background:
         linear-gradient(
             135deg,
-            var(--primary),
-            var(--primary-light)
+            var(--indigo),
+            var(--violet)
         );
 
     color:white;
@@ -189,6 +175,8 @@ button{
     font-size:15px;
 
     font-weight:700;
+
+    font-family:'Inter',sans-serif;
 
     cursor:pointer;
 
@@ -199,7 +187,7 @@ button:hover{
     transform:translateY(-2px);
 
     box-shadow:
-        0 15px 30px rgba(245,130,32,.35);
+        0 15px 30px rgba(79,70,229,.4);
 }
 
 button:active{
@@ -211,7 +199,7 @@ button:active{
 
     margin-top:15px;
 
-    color:#ff6b6b;
+    color:#fb7185;
 
     font-size:14px;
 
@@ -234,10 +222,6 @@ button:active{
         padding:35px 25px;
     }
 
-    .logo img{
-        width:180px;
-    }
-
     h2{
         font-size:20px;
     }
@@ -249,10 +233,6 @@ button:active{
 <body>
 
 <div class="box">
-
-    <div class="logo">
-        <img src="logo.png" alt="Logo ST">
-    </div>
 
     <h2>Acesso ao Sistema</h2>
 

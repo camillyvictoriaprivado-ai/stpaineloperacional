@@ -5,22 +5,41 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Dashboard Diário</title>
+<title>Dashboard Diário · TLP</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
 :root{
-    --primary:#f58220;
-    --primary-light:#ff9f43;
-    --secondary:#003a70;
-    --bg:#f4f6f9;
+    --indigo:#4f46e5;
+    --violet:#7c3aed;
+    --pink:#db2777;
+    --orange:#f97316;
+    --navy:#0f172a;
+    --bg:#f1f5f9;
     --white:#ffffff;
-    --text:#222;
-    --border:#e6eaef;
+    --text:#0f172a;
+    --muted:#64748b;
+    --border:#e2e8f0;
+    --border-light:#f1f5f9;
+
+    --emerald:#10b981;
+    --emerald-bg:#f0fdf4;
+    --emerald-text:#16a34a;
+
+    --rose:#f43f5e;
+    --rose-bg:#fff1f2;
+    --rose-text:#e11d48;
+
+    --amber:#fbbf24;
+    --amber-bg:#fffbeb;
+    --amber-text:#d97706;
+
+    --indigo-bg:#eef2ff;
+    --indigo-text:#4f46e5;
 }
 
 *{
@@ -30,37 +49,71 @@
 }
 
 body{
-    font-family:'Montserrat',sans-serif;
+    font-family:'Inter',sans-serif;
     background:var(--bg);
     color:var(--text);
+    -webkit-font-smoothing:antialiased;
 }
 
 /* HEADER */
 
 .header{
-    background:white;
+    background:var(--white);
 
-    padding:18px 25px;
+    padding:0 24px;
+    height:64px;
 
     display:flex;
     justify-content:space-between;
     align-items:center;
 
-    box-shadow:
-        0 2px 12px rgba(0,0,0,.05);
+    box-shadow:0 1px 0 var(--border);
+
+    position:sticky;
+    top:0;
+    z-index:20;
+}
+
+.header-left{
+    display:flex;
+    align-items:center;
+    gap:14px;
+}
+
+.logo-badge{
+    width:36px;
+    height:36px;
+    border-radius:12px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    shrink:0;
+
+    background:linear-gradient(135deg,var(--orange),var(--indigo));
+
+    color:white;
+    font-weight:900;
+    font-size:11px;
+    letter-spacing:.02em;
 }
 
 .header h1{
     margin:0;
-
-    color:var(--secondary);
-
-    font-size:24px;
-
+    color:var(--navy);
+    font-size:16px;
     font-weight:800;
+    line-height:1.2;
 }
 
-.header div{
+.header .subtitle{
+    font-size:12px;
+    color:var(--muted);
+    font-weight:500;
+    margin-top:2px;
+}
+
+.header-actions{
     display:flex;
     gap:10px;
 }
@@ -70,63 +123,53 @@ body{
 .btn{
     border:none;
 
-    padding:11px 16px;
-
-    border-radius:10px;
-
-    cursor:pointer;
-
-    font-family:'Montserrat',sans-serif;
-
-    font-weight:600;
-
-    transition:.25s;
-}
-
-.btn-dark-custom{
-    background:var(--secondary);
-    color:white;
-}
-
-.btn-dark-custom:hover{
-    background:#004d91;
-}
-
-.btn-yellow{
-    background:var(--primary);
-    color:white;
-    font-weight:700;
-}
-
-.btn-yellow:hover{
-    background:var(--primary-light);
-}
-
-/* VOLTAR */
-
-.back{
-    padding:20px;
-}
-
-.back button{
-    background:white;
-
-    border:1px solid var(--border);
-
-    color:var(--secondary);
-
     padding:10px 16px;
 
-    border-radius:10px;
+    border-radius:12px;
 
     cursor:pointer;
 
-    transition:.25s;
+    font-family:'Inter',sans-serif;
+
+    font-size:13px;
+
+    font-weight:700;
+
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+
+    transition:.2s ease;
 }
 
-.back button:hover{
-    background:var(--secondary);
+.btn-ghost{
+    background:var(--bg);
+    color:var(--text);
+    border:1px solid var(--border);
+}
+
+.btn-ghost:hover{
+    border-color:var(--indigo);
+    color:var(--indigo);
+}
+
+.btn-primary{
+    background:linear-gradient(135deg,var(--indigo),var(--violet));
     color:white;
+    box-shadow:0 4px 12px rgba(79,70,229,.25);
+}
+
+.btn-primary:hover{
+    opacity:.92;
+    transform:translateY(-1px);
+}
+
+/* WRAPPER */
+
+.content{
+    max-width:1400px;
+    margin:0 auto;
+    padding:24px;
 }
 
 /* KPIs */
@@ -134,56 +177,76 @@ body{
 .kpis{
     display:grid;
 
-    grid-template-columns:
-        repeat(auto-fit,minmax(240px,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
 
-    gap:20px;
+    gap:16px;
 
-    padding:20px;
+    margin-bottom:20px;
 }
 
 .kpi{
-    background:white;
+    background:var(--white);
 
-    border:none;
+    border:1px solid var(--border-light);
 
-    border-radius:18px;
+    border-radius:20px;
 
-    padding:22px;
+    padding:20px 22px;
 
-    box-shadow:
-        0 4px 15px rgba(0,0,0,.06);
+    box-shadow:0 1px 2px rgba(15,23,42,.04);
 
-    transition:.25s;
+    transition:.2s ease;
+
+    position:relative;
+    overflow:hidden;
 }
 
 .kpi:hover{
-    transform:translateY(-3px);
+    transform:translateY(-2px);
+    box-shadow:0 10px 24px rgba(15,23,42,.08);
+    border-color:transparent;
+}
 
-    box-shadow:
-        0 10px 25px rgba(0,0,0,.08);
+.kpi-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
 }
 
 .kpi h3{
     margin:0;
+    color:var(--muted);
+    font-size:11px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+}
 
-    color:#666;
-
-    font-size:14px;
-
-    font-weight:600;
+.kpi-dot{
+    width:9px;
+    height:9px;
+    border-radius:999px;
+    flex-shrink:0;
 }
 
 .kpi p{
-    font-size:30px;
+    font-size:28px;
+    margin:0;
+    color:var(--navy);
+    font-weight:900;
+    line-height:1.15;
+}
 
-    margin-top:12px;
+.kpi p.small-multiline{
+    font-size:14px;
+    font-weight:700;
+    line-height:1.6;
+    color:var(--navy);
+}
 
-    color:var(--secondary);
-
-    font-weight:800;
-
-    line-height:1.2;
+.kpi p.small-multiline b{
+    font-weight:900;
 }
 
 /* PAINÉIS */
@@ -191,28 +254,38 @@ body{
 .middle{
     display:grid;
 
-    grid-template-columns:
-        repeat(auto-fit,minmax(450px,1fr));
+    grid-template-columns:repeat(auto-fit,minmax(440px,1fr));
 
-    gap:20px;
-
-    padding:20px;
+    gap:16px;
 }
 
 .panel{
-    background:white;
+    background:var(--white);
 
-    border:none;
+    border:1px solid var(--border-light);
 
-    border-radius:18px;
+    border-radius:20px;
 
-    padding:20px;
+    padding:22px;
 
-    box-shadow:
-        0 4px 15px rgba(0,0,0,.06);
+    box-shadow:0 1px 2px rgba(15,23,42,.04);
+}
+
+.panel-head{
+    display:flex;
+    align-items:center;
+    justify-content:between;
+    margin-bottom:16px;
 }
 
 /* GRÁFICO CIRCULAR */
+
+.circle-wrap{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:10px 0;
+}
 
 .circle{
     width:160px;
@@ -224,20 +297,17 @@ body{
     align-items:center;
     justify-content:center;
 
-    margin:auto;
+    font-size:28px;
 
-    font-size:30px;
+    font-weight:900;
 
-    font-weight:800;
+    color:var(--navy);
 
-    color:var(--secondary);
-
-    background:
-        conic-gradient(
-            var(--primary) 0%,
-            var(--primary-light) 65%,
-            #e7ebf0 65%
-        );
+    background:conic-gradient(
+        var(--indigo) 0%,
+        var(--violet) 65%,
+        #e7ebf0 65%
+    );
 
     position:relative;
 }
@@ -247,8 +317,8 @@ body{
 
     position:absolute;
 
-    width:120px;
-    height:120px;
+    width:118px;
+    height:118px;
 
     background:white;
 
@@ -265,9 +335,32 @@ body{
 .panel h3,
 .panel h4,
 .panel h5{
-    color:var(--secondary);
-    font-weight:700;
-    margin-bottom:15px;
+    color:var(--navy);
+    font-weight:800;
+    font-size:14px;
+    margin-bottom:16px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.panel h3::before{
+    content:"";
+    width:4px;
+    height:14px;
+    border-radius:4px;
+    background:linear-gradient(180deg,var(--indigo),var(--violet));
+    display:inline-block;
+}
+
+/* badge pill usado opcionalmente */
+.pill{
+    font-size:10px;
+    font-weight:900;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    padding:3px 9px;
+    border-radius:999px;
 }
 
 /* RESPONSIVO */
@@ -275,12 +368,23 @@ body{
 @media(max-width:768px){
 
     .header{
-        flex-direction:column;
-        gap:15px;
+        padding:0 16px;
     }
 
     .header h1{
-        font-size:20px;
+        font-size:14px;
+    }
+
+    .header .subtitle{
+        display:none;
+    }
+
+    .btn span.btn-text{
+        display:none;
+    }
+
+    .content{
+        padding:16px;
     }
 
     .middle{
@@ -293,10 +397,9 @@ body{
     }
 
     .circle::before{
-        width:105px;
-        height:105px;
+        width:104px;
+        height:104px;
     }
-
 }
 </style>
 
@@ -306,55 +409,84 @@ body{
 
 <!-- HEADER -->
 <div class="header">
-    <h1>Dashboard operacional</h1>
+    <div class="header-left">
+        <div class="logo-badge">TLP</div>
+        <div>
+            <h1>Dashboard operacional</h1>
+            <div class="subtitle">Visão geral em tempo real</div>
+        </div>
+    </div>
 
-    <div>
-        <button class="btn btn-dark-custom" onclick="window.location.href='painel.html'">
-            ← Voltar ao Painel
+    <div class="header-actions">
+        <button class="btn btn-ghost" onclick="window.location.href='painel.html'">
+            ← <span class="btn-text">Voltar ao Painel</span>
         </button>
 
-        <button class="btn btn-yellow" onclick="exportarExcel()">
-            EXPORTAR EXCEL
+        <button class="btn btn-primary" onclick="exportarExcel()">
+            ⬇ <span class="btn-text">Exportar Excel</span>
         </button>
     </div>
 </div>
+
+<div class="content">
 
 <!-- KPIS -->
 <div class="kpis">
 
     <div class="kpi">
-        <h3>Aguardando Fechamento</h3>
+        <div class="kpi-top">
+            <h3>Aguardando Fechamento</h3>
+            <span class="kpi-dot" style="background:#f97316"></span>
+        </div>
         <p id="aguardando">0</p>
     </div>
 
     <div class="kpi">
-        <h3>Cancelado</h3>
+        <div class="kpi-top">
+            <h3>Cancelado</h3>
+            <span class="kpi-dot" style="background:#0f172a"></span>
+        </div>
         <p id="cancelado">0</p>
     </div>
 
     <div class="kpi">
-        <h3>Concluído</h3>
+        <div class="kpi-top">
+            <h3>Concluído</h3>
+            <span class="kpi-dot" style="background:#10b981"></span>
+        </div>
         <p id="concluido">0</p>
     </div>
 
     <div class="kpi">
-        <h3>EPS / Baixa Incorreta</h3>
+        <div class="kpi-top">
+            <h3>EPS / Baixa Incorreta</h3>
+            <span class="kpi-dot" style="background:#f43f5e"></span>
+        </div>
         <p id="eps">0</p>
     </div>
 
     <div class="kpi">
-        <h3>Supervisor Cidade</h3>
+        <div class="kpi-top">
+            <h3>Supervisor Cidade</h3>
+            <span class="kpi-dot" style="background:#4f46e5"></span>
+        </div>
         <p id="supervisor">0</p>
     </div>
 
     <div class="kpi">
-        <h3>Responsável Fibra</h3>
+        <div class="kpi-top">
+            <h3>Responsável Fibra</h3>
+            <span class="kpi-dot" style="background:#7c3aed"></span>
+        </div>
         <p id="fibra">-</p>
     </div>
 
     <div class="kpi">
-        <h3>Previsão Mensal</h3>
-        <p id="previsao">0</p>
+        <div class="kpi-top">
+            <h3>Previsão Mensal</h3>
+            <span class="kpi-dot" style="background:#db2777"></span>
+        </div>
+        <p class="small-multiline" id="previsao">0</p>
     </div>
 
 </div>
@@ -379,7 +511,9 @@ body{
 
     <div class="panel">
         <h3>Produtividade</h3>
-        <div class="circle" id="circle">0%</div>
+        <div class="circle-wrap">
+            <div class="circle" id="circle"><span>0%</span></div>
+        </div>
     </div>
 
     <div class="panel">
@@ -389,11 +523,17 @@ body{
 
 </div>
 
+</div>
+
 <script>
 
 const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec";
 
 let barChart, pieChart, clusterChart, forecastChart;
+
+const CHART_FONT = "'Inter', sans-serif";
+Chart.defaults.font.family = CHART_FONT;
+Chart.defaults.color = "#64748b";
 
 function uniqueById(arr, key = "id") {
     const seen = new Set();
@@ -478,23 +618,36 @@ const faltamMeta = Math.max(
 );
 
 document.getElementById("previsao").innerHTML = `
-    Atual: ${total.toLocaleString("pt-BR")}<br>
-    Prev.: +${previsaoAdicional.toLocaleString("pt-BR")}<br>
-    Total: ${totalPrevisto.toLocaleString("pt-BR")}
+    Atual: <b>${total.toLocaleString("pt-BR")}</b><br>
+    Prev.: <b>+${previsaoAdicional.toLocaleString("pt-BR")}</b><br>
+    Total: <b>${totalPrevisto.toLocaleString("pt-BR")}</b>
 `;
 
-document.getElementById("circle").innerText = perc + "%";
+document.querySelector("#circle span").innerText = perc + "%";
     document.getElementById("circle").style.background =
-        `conic-gradient(#ff7a00 ${perc}%, #eee ${perc}%)`;
+        `conic-gradient(#4f46e5 ${perc}%, #e7ebf0 ${perc}%)`;
+
+    const gridColor = "#f1f5f9";
 
     if(barChart) barChart.destroy();
     barChart = new Chart(document.getElementById("barChart"),{
         type:"bar",
         data:{
             labels:["Aguardando","Cancelado","Concluído","EPS","Supervisor"],
-            datasets:[{ data:[aguardando,cancelado,concluido,eps,supervisor], backgroundColor:["#ff7a00","#111","#00aa55","#ff0055","#5555ff"] }]
+            datasets:[{
+                data:[aguardando,cancelado,concluido,eps,supervisor],
+                backgroundColor:["#f97316","#0f172a","#10b981","#f43f5e","#4f46e5"],
+                borderRadius:8,
+                maxBarThickness:48
+            }]
         },
-        options:{ plugins:{ legend:{ display:false } } }
+        options:{
+            plugins:{ legend:{ display:false } },
+            scales:{
+                x:{ grid:{ display:false } },
+                y:{ grid:{ color:gridColor }, beginAtZero:true }
+            }
+        }
     });
 
     if(pieChart) pieChart.destroy();
@@ -502,7 +655,11 @@ document.getElementById("circle").innerText = perc + "%";
         type:"doughnut",
         data:{
             labels:["Concluído","Restante"],
-            datasets:[{ data:[concluido, total-concluido], backgroundColor:["#ff7a00","#eee"] }]
+            datasets:[{ data:[concluido, total-concluido], backgroundColor:["#4f46e5","#e7ebf0"], borderWidth:0 }]
+        },
+        options:{
+            cutout:"68%",
+            plugins:{ legend:{ position:"bottom", labels:{ usePointStyle:true, boxWidth:8, padding:16, font:{ weight:600, size:12 } } } }
         }
     });
 
@@ -511,9 +668,15 @@ document.getElementById("circle").innerText = perc + "%";
         type:"bar",
         data:{
             labels:Object.keys(clusterMap),
-            datasets:[{ data:Object.values(clusterMap), backgroundColor:"#ff7a00" }]
+            datasets:[{ data:Object.values(clusterMap), backgroundColor:"#7c3aed", borderRadius:8, maxBarThickness:40 }]
         },
-        options:{ plugins:{ legend:{ display:false } } }
+        options:{
+            plugins:{ legend:{ display:false } },
+            scales:{
+                x:{ grid:{ display:false } },
+                y:{ grid:{ color:gridColor }, beginAtZero:true }
+            }
+        }
     });
 
     // ===== GRÁFICO DE PROJEÇÃO =====
@@ -537,10 +700,12 @@ datasets:[{
         totalPrevisto
     ],
                 backgroundColor:[
-                    "#111",
-                    "#ff7a00",
-                    "#00aa55"
-                ]
+                    "#0f172a",
+                    "#f97316",
+                    "#10b981"
+                ],
+                borderRadius:8,
+                maxBarThickness:56
             }]
         },
         options:{
@@ -557,7 +722,9 @@ datasets:[{
                 }
             },
             scales:{
+                x:{ grid:{ display:false } },
                 y:{
+                    grid:{ color:gridColor },
                     beginAtZero:true
                 }
             }
