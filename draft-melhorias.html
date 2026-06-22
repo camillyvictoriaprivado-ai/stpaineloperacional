@@ -83,6 +83,8 @@ body{
 .chart-container{
     position:relative;
     height:320px;
+    overflow-x:auto;
+    overflow-y:hidden;
 }
 
 canvas{
@@ -467,15 +469,14 @@ function montarCards(dados){
         const status =
             String(d["status campo"] || "")
             .trim()
-            .toUpperCase();
+            .toUpperCase()
+            .normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 
-        if(status.includes("EXEC")){
+        if(status === "CONCLUIDO"){
             exec++;
-        } else {
+        } else if(status === "PENDENTE"){
             pend++;
-        }
-
-        if(status === "CAMPO"){
+        } else if(status.includes("EXECU")){
             campo++;
         }
 
@@ -537,13 +538,18 @@ function montarGraficos(dados){
 });
 
     // ARMÁRIO (BAR)
-    // ARMÁRIO (BAR)
 const armario = agrupar(dados,"armario");
+const armarioLabels = Object.keys(armario);
+const armarioMinWidth = Math.max(600, armarioLabels.length * 42);
 
-chartArmario = new Chart(document.getElementById("armarioChart"), {
+const armarioCanvas = document.getElementById("armarioChart");
+armarioCanvas.parentElement.style.overflowX = "auto";
+armarioCanvas.style.minWidth = armarioMinWidth + "px";
+
+chartArmario = new Chart(armarioCanvas, {
     type:"bar",
     data:{
-        labels:Object.keys(armario),
+        labels: armarioLabels,
         datasets:[{
             data:Object.values(armario),
             backgroundColor:"#4f46e5",
@@ -559,7 +565,7 @@ chartArmario = new Chart(document.getElementById("armarioChart"), {
             if(!elements.length) return;
 
             const valor =
-                Object.keys(armario)[elements[0].index];
+                armarioLabels[elements[0].index];
 
             filtroArmario =
                 filtroArmario === valor ? "" : valor;
@@ -569,6 +575,20 @@ chartArmario = new Chart(document.getElementById("armarioChart"), {
 
         plugins:{
             legend:{display:false}
+        },
+
+        scales:{
+            x:{
+                ticks:{
+                    maxRotation:60,
+                    minRotation:45,
+                    font:{ size:10 }
+                }
+            },
+            y:{
+                beginAtZero:true,
+                ticks:{ precision:0 }
+            }
         }
     }
 });
@@ -620,15 +640,20 @@ chartStatusCampo = new Chart(
 );
 
     // CLUSTER (BAR)
-    // CLUSTER (BAR)
 const cluster = agrupar(dados,"cluster");
+const clusterLabels = Object.keys(cluster);
+const clusterMinWidth = Math.max(400, clusterLabels.length * 60);
+
+const clusterCanvas = document.getElementById("clusterChart");
+clusterCanvas.parentElement.style.overflowX = "auto";
+clusterCanvas.style.minWidth = clusterMinWidth + "px";
 
 chartCluster = new Chart(
-    document.getElementById("clusterChart"),
+    clusterCanvas,
     {
         type:"bar",
         data:{
-            labels:Object.keys(cluster),
+            labels: clusterLabels,
             datasets:[{
                 data:Object.values(cluster),
                 backgroundColor:"#0f172a",
@@ -644,7 +669,7 @@ chartCluster = new Chart(
                 if(!elements.length) return;
 
                 const valor =
-                    Object.keys(cluster)[elements[0].index];
+                    clusterLabels[elements[0].index];
 
                 filtroClusterGrafico =
                     filtroClusterGrafico === valor ? "" : valor;
@@ -660,15 +685,19 @@ chartCluster = new Chart(
                 x:{
                     ticks:{
                         maxRotation:45,
-                        minRotation:45
+                        minRotation:45,
+                        font:{ size:11 }
                     }
+                },
+                y:{
+                    beginAtZero:true,
+                    ticks:{ precision:0 }
                 }
             }
         }
     }
 );
 
-    // CUSTO TOTAL (BAR)
     // CUSTO TOTAL (BAR)
 
 const custo = {};
@@ -682,12 +711,19 @@ dados.forEach(d=>{
         parseCusto(d["custo total"]);
 });
 
+const custoLabels = Object.keys(custo);
+const custoMinWidth = Math.max(400, custoLabels.length * 60);
+
+const custoCanvas = document.getElementById("custoChart");
+custoCanvas.parentElement.style.overflowX = "auto";
+custoCanvas.style.minWidth = custoMinWidth + "px";
+
 chartCusto = new Chart(
-    document.getElementById("custoChart"),
+    custoCanvas,
     {
         type:"bar",
         data:{
-            labels:Object.keys(custo),
+            labels: custoLabels,
             datasets:[{
                 data:Object.values(custo),
                 backgroundColor:"#f97316",
@@ -703,7 +739,7 @@ chartCusto = new Chart(
                 if(!elements.length) return;
 
                 const valor =
-                    Object.keys(custo)[elements[0].index];
+                    custoLabels[elements[0].index];
 
                 filtroClusterGrafico =
                     filtroClusterGrafico === valor ? "" : valor;
@@ -712,14 +748,26 @@ chartCusto = new Chart(
             },
 
             plugins:{
-                legend:{display:false}
+                legend:{display:false},
+                tooltip:{
+                    callbacks:{
+                        label: ctx => "R$ " + ctx.parsed.y.toLocaleString("pt-BR",{minimumFractionDigits:2})
+                    }
+                }
             },
 
             scales:{
                 x:{
                     ticks:{
                         maxRotation:45,
-                        minRotation:45
+                        minRotation:45,
+                        font:{ size:11 }
+                    }
+                },
+                y:{
+                    beginAtZero:true,
+                    ticks:{
+                        callback: v => "R$ " + v.toLocaleString("pt-BR",{minimumFractionDigits:0})
                     }
                 }
             }
