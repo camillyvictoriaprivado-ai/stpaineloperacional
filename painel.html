@@ -42,6 +42,13 @@ body{
     font-family:'Inter',sans-serif;
     background:var(--bg);
     color:var(--text);
+
+    opacity:0;
+    transition:opacity .15s ease;
+}
+
+body.auth-ready{
+    opacity:1;
 }
 
 /* HEADER */
@@ -225,6 +232,20 @@ body{
     color:var(--text);
 
     letter-spacing:-.02em;
+
+    font-variant-numeric:tabular-nums;
+}
+
+.box span.value.is-loading{
+    color:var(--text-faint);
+}
+
+.box .updated-at{
+    display:block;
+    margin-top:8px;
+    font-size:11px;
+    font-weight:600;
+    color:var(--text-faint);
 }
 
 .box.box-rose{ --box-accent:linear-gradient(90deg,var(--rose),#fb7185); }
@@ -316,6 +337,28 @@ body{
     background:var(--border);
 }
 
+.section-title .region-tag{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:3px 10px;
+    border-radius:20px;
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.06em;
+}
+
+.section-title .region-tag::before{
+    content:"";
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:currentColor;
+}
+
+.region-tag.tag-sc{ background:#eef2ff; color:var(--primary-dark); }
+.region-tag.tag-rs{ background:var(--emerald-bg); color:var(--emerald-text); }
+
 /* GRID */
 
 .grid{
@@ -352,6 +395,10 @@ body{
 
     text-decoration:none;
     color:inherit;
+
+    width:100%;
+    font-family:inherit;
+    text-align:left;
 }
 
 .card:hover{
@@ -362,6 +409,35 @@ body{
 
 .card:active{
     transform:translateY(-1px) scale(.99);
+}
+
+.card:focus-visible{
+    outline:2px solid var(--primary);
+    outline-offset:2px;
+}
+
+.card.card-disabled{
+    cursor:not-allowed;
+    opacity:.55;
+}
+
+.card.card-disabled:hover{
+    transform:none;
+    border-color:var(--border-light);
+    box-shadow:0 1px 3px rgba(15,23,42,.04);
+}
+
+.card-soon{
+    margin-left:auto;
+    flex-shrink:0;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    background:var(--border-light);
+    padding:3px 9px;
+    border-radius:20px;
 }
 
 .card-icon{
@@ -458,10 +534,19 @@ async function checkLogin() {
 
     const url = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec?type=validate&token=" + token;
 
-    const res = await fetch(url);
-    const data = await res.json();
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
 
-    if (!data.valid) {
+        if (!data.valid) {
+            window.location.href = "index.html";
+            return;
+        }
+
+        document.body.classList.add("auth-ready");
+
+    } catch (err) {
+        console.error("Não foi possível validar o login:", err);
         window.location.href = "index.html";
     }
 }
@@ -507,74 +592,134 @@ checkLogin();
             <div id="bar" class="bar"></div>
         </div>
         <p id="percent">0%</p>
+        <p class="updated-at" id="updatedAt"></p>
     </div>
 
-    <h2 class="section-title">Manutenção Emergencial</h2>
+    <h2 class="section-title">Manutenção Emergencial <span class="region-tag tag-sc">SC</span></h2>
 
     <div class="grid">
 
-        <div class="card" onclick="go('dashboard.html')">
+        <button type="button" class="card" onclick="go('dashboard.html')">
             <div class="card-icon">📊</div>
             <div class="card-body">
                 <h3>Dashboard</h3>
                 <p>Acompanhamento diário</p>
             </div>
-        </div>
+        </button>
 
-        <div class="card" onclick="go('')">
+        <button type="button" class="card card-disabled" disabled aria-disabled="true">
             <div class="card-icon">📈</div>
             <div class="card-body">
                 <h3>Dashboard</h3>
                 <p>KPis estratégicos</p>
             </div>
-        </div>
+            <span class="card-soon">Em breve</span>
+        </button>
 
-        <div class="card" onclick="go('almoxarifado-estoque.html')">
+        <button type="button" class="card" onclick="go('almoxarifado-estoque.html')">
             <div class="card-icon">📦</div>
             <div class="card-body">
                 <h3>Almoxarifado</h3>
                 <p>Controle de estoque</p>
             </div>
-        </div>
+        </button>
 
-        <div class="card" onclick="go('almoxarifado-pendencias.html')">
+        <button type="button" class="card" onclick="go('almoxarifado-pendencias.html')">
             <div class="card-icon">📋</div>
             <div class="card-body">
                 <h3>Almoxarifado</h3>
                 <p>Controle de pendências</p>
             </div>
-        </div>
+        </button>
 
     </div>
 
-    <h2 class="section-title">Implantação/Manutenção</h2>
+    <h2 class="section-title">Implantação/Manutenção SC <span class="region-tag tag-sc">SC</span></h2>
 
     <div class="grid">
 
-        <div class="card" onclick="go('draft-melhorias.html')">
+        <button type="button" class="card" onclick="go('draft-melhorias.html')">
             <div class="card-icon">🛠️</div>
             <div class="card-body">
                 <h3>Draft</h3>
-                <p>Melhorias de rede</p>
+                <p>Primárias Ofensoras</p>
             </div>
-        </div>
+        </button>
 
-        <div class="card" onclick="go('draft-b2b.html')">
+        <button type="button" class="card" onclick="go('draft-b2b.html')">
             <div class="card-icon">🏢</div>
             <div class="card-body">
                 <h3>Draft</h3>
                 <p>B2B</p>
             </div>
-        </div>
+        </button>
 
-        <div class="card" onclick="window.open('https://projetokanban.vercel.app/','_blank')">
+        <button type="button" class="card card-disabled" disabled aria-disabled="true">
+            <div class="card-icon">🌐</div>
+            <div class="card-body">
+                <h3>Draft</h3>
+                <p>Site</p>
+            </div>
+            <span class="card-soon">Em breve</span>
+        </button>
+
+        <button type="button" class="card card-disabled" disabled aria-disabled="true">
+            <div class="card-icon">🏗️</div>
+            <div class="card-body">
+                <h3>Draft</h3>
+                <p>Prumada</p>
+            </div>
+            <span class="card-soon">Em breve</span>
+        </button>
+
+        <button type="button" class="card card-disabled" disabled aria-disabled="true">
+            <div class="card-icon">🗄️</div>
+            <div class="card-body">
+                <h3>Draft</h3>
+                <p>Armário</p>
+            </div>
+            <span class="card-soon">Em breve</span>
+        </button>
+
+        <button type="button" class="card card-disabled" disabled aria-disabled="true">
+            <div class="card-icon">🛍️</div>
+            <div class="card-body">
+                <h3>Draft</h3>
+                <p>Adequação Shopping</p>
+            </div>
+            <span class="card-soon">Em breve</span>
+        </button>
+
+        <a class="card" href="https://projetokanban.vercel.app/" target="_blank" rel="noopener">
             <div class="card-icon kanban-icon">🗂️</div>
             <div class="card-body">
                 <h3>Projeto Kanban</h3>
                 <p>Gestão de tarefas</p>
             </div>
             <span class="card-external">↗ externo</span>
-        </div>
+        </a>
+
+    </div>
+
+    <h2 class="section-title">Implantação/Manutenção RS <span class="region-tag tag-rs">RS</span></h2>
+
+    <div class="grid">
+
+        <button type="button" class="card" onclick="go('draft-melhorias-rs.html')">
+            <div class="card-icon">🛠️</div>
+            <div class="card-body">
+                <h3>Draft</h3>
+                <p>Primárias Ofensoras</p>
+            </div>
+        </button>
+
+        <button type="button" class="card" onclick="go('draft-b2b-rs.html')">
+            <div class="card-icon">🏢</div>
+            <div class="card-body">
+                <h3>Draft</h3>
+                <p>B2B</p>
+            </div>
+        </button>
 
     </div>
 
@@ -589,15 +734,24 @@ function go(page) {
 }
 
 function norm(v){
-    return (v || "").toString().trim().toUpperCase();
+    return (v || "").toString().trim().toUpperCase().replace(/\s+/g, "");
 }
 
 async function carregar() {
 
-    const res = await fetch(API_URL + "?v=" + Date.now());
-    const data = await res.json();
+    const valores = ["aguardandoFechamento", "eps", "concluidos"];
+    valores.forEach(id => document.getElementById(id).classList.add("is-loading"));
 
-    const base = data.base || [];
+    const btnAtualizar = document.querySelector(".btn");
+    const textoOriginal = btnAtualizar.innerText;
+    btnAtualizar.innerText = "Atualizando...";
+    btnAtualizar.disabled = true;
+
+    try {
+        const res = await fetch(API_URL + "?v=" + Date.now());
+        const data = await res.json();
+
+        const base = data.base || [];
 
     const aguardandoFechamento = new Set(
         base
@@ -617,24 +771,38 @@ async function carregar() {
             .map(i => i.id)
     ).size;
 
-    document.getElementById("aguardandoFechamento").innerText = aguardandoFechamento;
-    document.getElementById("eps").innerText = eps;
-    document.getElementById("concluidos").innerText = supervisorCidade;
+        document.getElementById("aguardandoFechamento").innerText = aguardandoFechamento;
+        document.getElementById("eps").innerText = eps;
+        document.getElementById("concluidos").innerText = supervisorCidade;
 
-    const metaMes = 1400;
-    const idsUnicos = new Set(base.map(item => item.id)).size;
-    const hoje = new Date();
-    const diaAtual = hoje.getDate();
-    const diasNoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
-    const mediaDia = idsUnicos / diaAtual;
-    const previsaoMes = Math.round(mediaDia * diasNoMes);
-    const faltam = Math.max(0, previsaoMes - idsUnicos);
-    const percent = Math.min(Math.round((idsUnicos / metaMes) * 100), 100);
+        const metaMes = 1400;
+        const idsUnicos = new Set(base.map(item => item.id)).size;
+        const hoje = new Date();
+        const diaAtual = hoje.getDate();
+        const diasNoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
+        const mediaDia = idsUnicos / diaAtual;
+        const previsaoMes = Math.round(mediaDia * diasNoMes);
+        const faltam = Math.max(0, previsaoMes - idsUnicos);
+        const percent = Math.min(Math.round((idsUnicos / metaMes) * 100), 100);
 
-    document.getElementById("percent").innerHTML =
-        `Atual: <b>${idsUnicos}</b> &nbsp;|&nbsp; Previsão: <b>${previsaoMes}</b> &nbsp;|&nbsp; Faltam: <b>${faltam}</b>`;
+        document.getElementById("percent").innerHTML =
+            `Atual: <b>${idsUnicos}</b> &nbsp;|&nbsp; Previsão: <b>${previsaoMes}</b> &nbsp;|&nbsp; Faltam: <b>${faltam}</b>`;
 
-    document.getElementById("bar").style.width = percent + "%";
+        document.getElementById("bar").style.width = percent + "%";
+
+        const agora = new Date();
+        const hora = agora.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+        document.getElementById("updatedAt").innerText = `Atualizado às ${hora}`;
+
+    } catch (err) {
+        console.error("Erro ao carregar dados:", err);
+        document.getElementById("updatedAt").innerText =
+            "Não foi possível atualizar os dados agora. Tente novamente em instantes.";
+    } finally {
+        valores.forEach(id => document.getElementById(id).classList.remove("is-loading"));
+        btnAtualizar.innerText = textoOriginal;
+        btnAtualizar.disabled = false;
+    }
 }
 
 carregar();
