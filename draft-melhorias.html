@@ -24,13 +24,20 @@
     --green:#10b981;
     --amber:#f59e0b;
     --red:#ef4444;
-    --bg:#f0f4f8;
+    --bg:#f1f5f9;
     --white:#ffffff;
     --text:#0f172a;
     --muted:#64748b;
     --muted-2:#94a3b8;
     --border:#e2e8f0;
     --border-light:#f1f5f9;
+
+    /* Paleta do site (painel.html) — usada no cabeçalho e botões */
+    --primary:#4f46e5;
+    --primary-dark:#4338ca;
+    --secondary:#7c3aed;
+    --accent:#db2777;
+    --text-faint:#94a3b8;
 }
 
 *{ box-sizing:border-box; }
@@ -46,19 +53,25 @@ body{
 .wrap{
     max-width:1440px;
     margin:0 auto;
-    padding:0 24px 32px;
+    padding:24px 24px 32px;
 }
 
-/* HEADER */
+/* HEADER — mesmo estilo do painel.html (fundo branco, título maiúsculo, botões gradiente) */
 .header{
-    background:var(--navy);
-    border-bottom:1px solid var(--navy-2);
-    padding:16px 24px;
-    margin-bottom:24px;
+    height:75px;
+    background:var(--white);
+    border-bottom:1px solid var(--border-light);
+    padding:0 30px;
+    display:flex;
+    align-items:center;
+    position:sticky;
+    top:0;
+    z-index:100;
 }
 .header-inner{
     max-width:1440px;
     margin:0 auto;
+    width:100%;
     display:flex;
     align-items:center;
     justify-content:space-between;
@@ -66,32 +79,54 @@ body{
     gap:12px;
 }
 .logo-row{ display:flex; align-items:center; gap:12px; }
-.logo-badge{
-    width:36px; height:36px; border-radius:10px;
-    background:linear-gradient(135deg,var(--blue),var(--indigo));
-    display:flex; align-items:center; justify-content:center;
-    color:white; font-weight:900; font-size:11px; letter-spacing:.05em;
+.title-main{
+    color:var(--text);
+    font-weight:900;
+    font-size:16px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
 }
-.title-main{ color:white; font-weight:800; font-size:16px; letter-spacing:-.01em; }
-.title-sub{ color:var(--muted-2); font-size:12px; }
-.header-right{ display:flex; align-items:center; gap:16px; }
+.title-main::before{
+    content:"";
+    display:inline-block;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    margin-right:10px;
+    background:linear-gradient(135deg,var(--primary),var(--secondary));
+    vertical-align:middle;
+}
+.title-sub{ color:var(--text-faint); font-size:12px; margin-left:18px; margin-top:2px; }
+.header-right{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
 .status-dot{ display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; }
-.status-line{ color:var(--muted-2); font-size:12px; display:flex; align-items:center; }
+.status-line{ color:var(--text-faint); font-size:12px; display:flex; align-items:center; }
 .btn-refresh{
-    background:var(--navy-2);
-    border:1px solid var(--navy-3);
-    color:#94a3b8;
-    border-radius:8px;
-    padding:6px 14px;
-    font-size:13px;
-    font-weight:600;
+    color:white;
+    border:none;
+    background:linear-gradient(135deg,var(--primary),var(--secondary));
+    box-shadow:0 4px 14px rgba(79,70,229,.25);
+    padding:10px 20px;
+    border-radius:12px;
+    font-size:12px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.05em;
     display:flex;
     align-items:center;
     gap:6px;
     cursor:pointer;
-    transition:.15s;
+    transition:.2s;
+    text-decoration:none;
 }
-.btn-refresh:hover{ color:white; border-color:var(--blue); }
+.btn-refresh:hover{ transform:translateY(-2px); box-shadow:0 8px 20px rgba(79,70,229,.35); color:white; }
+.btn-refresh:active{ transform:scale(.98); }
+.btn-refresh.btn-outline{
+    background:var(--white);
+    color:var(--text);
+    border:1px solid var(--border);
+    box-shadow:none;
+}
+.btn-refresh.btn-outline:hover{ border-color:var(--primary); color:var(--primary); box-shadow:none; transform:none; }
 .spin{ animation:spin 1s linear infinite; }
 @keyframes spin{ from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
 
@@ -332,7 +367,6 @@ table.mini td{ padding:8px 12px; color:#374151; vertical-align:middle; border-to
 <div class="header">
     <div class="header-inner">
         <div class="logo-row">
-            <div class="logo-badge">TLP</div>
             <div>
                 <div class="title-main">Relatório Gerencial — Melhorias de Rede</div>
                 <div class="title-sub">GPON / Infraestrutura de Fibra</div>
@@ -340,8 +374,8 @@ table.mini td{ padding:8px 12px; color:#374151; vertical-align:middle; border-to
         </div>
         <div class="header-right">
             <div class="status-line" id="statusLine"></div>
-            <a href="painel.html" class="btn-refresh" style="text-decoration:none;">← Voltar ao Painel</a>
-            <button class="btn-refresh" id="btnImportar" onclick="openImportModal()" style="background:linear-gradient(135deg,#3b82f6,#6366f1);border-color:transparent;color:white;">
+            <a href="painel.html" class="btn-refresh btn-outline" style="text-decoration:none;">← Voltar ao Painel</a>
+            <button class="btn-refresh" id="btnImportar" onclick="openImportModal()" style="background:linear-gradient(135deg,var(--accent),var(--secondary));box-shadow:0 4px 14px rgba(219,39,119,.25);">
                 📥 Importar Planilha
             </button>
             <button class="btn-refresh" id="btnRefresh" onclick="carregar()">
@@ -464,6 +498,19 @@ const DRAFT_COLORS = ["#10b981","#f59e0b","#ef4444","#6366f1","#3b82f6","#8b5cf6
 /* ==========================================================
    FETCH
    ========================================================== */
+function normalizeMelhoria(d){
+    // A API pode devolver "id obra" e outros campos como number (JSON),
+    // mas todo o app compara/usa esses valores como string (Set, .toLowerCase(), etc).
+    // Sem essa normalização, comparações de tipo (number !== string) quebram
+    // funcionalidades como abrir/fechar o ID Obra na Fila de Aprovação.
+    const out = {};
+    Object.keys(d).forEach(k => {
+        const v = d[k];
+        out[k] = (v === null || v === undefined) ? "" : String(v);
+    });
+    return out;
+}
+
 async function carregar(){
     loading = true;
     hasError = false;
@@ -472,7 +519,7 @@ async function carregar(){
     try{
         const res = await fetch(API_URL + "&cache=" + Date.now());
         const json = await res.json();
-        dadosGlobais = json.melhorias || [];
+        dadosGlobais = (json.melhorias || []).map(normalizeMelhoria);
         lastUpdate = new Date();
     }catch(e){
         hasError = true;
