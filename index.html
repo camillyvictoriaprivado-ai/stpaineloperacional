@@ -228,6 +228,28 @@ button:active{
     text-decoration:underline;
 }
 
+.admin-link-wrap{
+    margin-top:14px;
+}
+
+.admin-link{
+    display:inline-block;
+    padding:8px 16px;
+    border-radius:8px;
+    border:1px solid rgba(255,255,255,.18);
+    color:rgba(255,255,255,.65) !important;
+    font-size:12px;
+    font-weight:600;
+    text-decoration:none !important;
+    transition:.2s;
+}
+
+.admin-link:hover{
+    background:rgba(255,255,255,.08);
+    color:rgba(255,255,255,.9) !important;
+    border-color:rgba(255,255,255,.3);
+}
+
 @media(max-width:480px){
 
     .box{
@@ -259,6 +281,9 @@ button:active{
     <div class="footer">
         Portal Operacional ST<br><br>
         Não tem conta? <a href="cadastro.html">Cadastre-se</a>
+        <div class="admin-link-wrap">
+            <a class="admin-link" href="admin.html">Aprovar cadastro</a>
+        </div>
     </div>
 
 </div>
