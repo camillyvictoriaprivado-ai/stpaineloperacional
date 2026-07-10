@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Aprovação de Cadastros</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+:root{
+    --indigo:#4f46e5;
+    --violet:#7c3aed;
+    --bg:#f1f5f9;
+    --text:#0f172a;
+    --border:#e2e8f0;
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+
+body{
+    font-family:'Inter',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    padding:30px 20px;
+}
+
+.container{
+    max-width:700px;
+    margin:0 auto;
+}
+
+h1{
+    font-size:22px;
+    font-weight:900;
+    margin-bottom:6px;
+}
+
+p.sub{
+    color:#6b7a99;
+    font-size:14px;
+    margin-bottom:24px;
+}
+
+.card{
+    background:white;
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:22px;
+    margin-bottom:18px;
+    box-shadow:0 1px 3px rgba(15,23,42,.04);
+}
+
+.login-card input{
+    width:100%;
+    padding:13px 16px;
+    margin-bottom:12px;
+    border:1px solid var(--border);
+    border-radius:10px;
+    font-size:14px;
+    font-family:'Inter',sans-serif;
+}
+
+button{
+    padding:12px 20px;
+    border:none;
+    border-radius:10px;
+    background:linear-gradient(135deg, var(--indigo), var(--violet));
+    color:white;
+    font-weight:700;
+    font-size:13px;
+    cursor:pointer;
+    transition:.2s;
+}
+
+button:hover{ transform:translateY(-2px); }
+button:disabled{ opacity:.5; cursor:not-allowed; transform:none; }
+
+.pendente{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 0;
+    border-bottom:1px solid var(--border-light, #f1f5f9);
+}
+
+.pendente:last-child{ border-bottom:none; }
+
+.pendente .info strong{ display:block; font-size:14px; }
+.pendente .info span{ font-size:12px; color:#6b7a99; }
+
+.pendente .acoes{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+select{
+    padding:10px 12px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+}
+
+.btn-aprovar{ background:linear-gradient(135deg,#10b981,#34d399); }
+.btn-reprovar{ background:linear-gradient(135deg,#f43f5e,#fb7185); }
+
+.vazio{
+    color:#94a3b8;
+    font-size:14px;
+    text-align:center;
+    padding:20px 0;
+}
+
+.msg{
+    font-size:13px;
+    font-weight:600;
+    margin-top:10px;
+}
+
+.msg.erro{ color:#e11d48; }
+.msg.ok{ color:#059669; }
+
+#painelPendentes{ display:none; }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Aprovação de Cadastros</h1>
+    <p class="sub">Área restrita ao administrador do sistema.</p>
+
+    <div class="card login-card" id="cardLogin">
+        <input type="password" id="senhaAdmin" placeholder="Senha de administrador">
+        <button onclick="carregarPendentes()">Entrar</button>
+        <div class="msg erro" id="msgLogin"></div>
+    </div>
+
+    <div class="card" id="painelPendentes">
+        <div id="listaPendentes"></div>
+        <div class="msg" id="msgAcao"></div>
+    </div>
+
+</div>
+
+<script>
+
+const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec";
+
+// Edite esta lista para refletir os níveis que existem no seu sistema.
+const NIVEIS_DISPONIVEIS = ["admin", "sc", "rs", "almoxarifado"];
+
+let senhaAtual = "adminsalatecnica";
+
+async function carregarPendentes(){
+    const msgLogin = document.getElementById("msgLogin");
+    msgLogin.textContent = "";
+
+    senhaAtual = document.getElementById("senhaAdmin").value;
+
+    if(!senhaAtual){
+        msgLogin.textContent = "Digite a senha de administrador.";
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}?type=usuarios-pendentes&senhaAdmin=${encodeURIComponent(senhaAtual)}`);
+        const data = await res.json();
+
+        if(data.error){
+            msgLogin.textContent = data.error;
+            return;
+        }
+
+        document.getElementById("cardLogin").style.display = "none";
+        document.getElementById("painelPendentes").style.display = "block";
+
+        renderizarPendentes(data.pendentes || []);
+
+    } catch(err){
+        console.error(err);
+        msgLogin.textContent = "Erro de conexão.";
+    }
+}
+
+function renderizarPendentes(pendentes){
+    const lista = document.getElementById("listaPendentes");
+
+    if(pendentes.length === 0){
+        lista.innerHTML = '<p class="vazio">Nenhum cadastro pendente no momento.</p>';
+        return;
+    }
+
+    lista.innerHTML = pendentes.map(u => `
+        <div class="pendente" data-email="${u.email}">
+            <div class="info">
+                <strong>${u.nome}</strong>
+                <span>${u.email}</span>
+            </div>
+            <div class="acoes">
+                <select class="select-nivel">
+                    ${NIVEIS_DISPONIVEIS.map(n => `<option value="${n}">${n}</option>`).join("")}
+                </select>
+                <button class="btn-aprovar" onclick="aprovar('${u.email}', this)">Aprovar</button>
+                <button class="btn-reprovar" onclick="reprovar('${u.email}', this)">Recusar</button>
+            </div>
+        </div>
+    `).join("");
+}
+
+async function aprovar(email, botao){
+    const linha = botao.closest(".pendente");
+    const nivel = linha.querySelector(".select-nivel").value;
+
+    botao.disabled = true;
+
+    try {
+        const res = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "aprovar_usuario", senhaAdmin: senhaAtual, email, nivel })
+        });
+        const data = await res.json();
+
+        if(data.ok){
+            linha.remove();
+            mostrarMsgAcao(`Usuário ${email} aprovado com nível "${nivel}".`, "ok");
+        } else {
+            mostrarMsgAcao(data.error || "Erro ao aprovar.", "erro");
+            botao.disabled = false;
+        }
+    } catch(err){
+        console.error(err);
+        mostrarMsgAcao("Erro de conexão.", "erro");
+        botao.disabled = false;
+    }
+}
+
+async function reprovar(email, botao){
+    if(!confirm(`Recusar e excluir o cadastro de ${email}?`)) return;
+
+    botao.disabled = true;
+
+    try {
+        const res = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "reprovar_usuario", senhaAdmin: senhaAtual, email })
+        });
+        const data = await res.json();
+
+        if(data.ok){
+            botao.closest(".pendente").remove();
+            mostrarMsgAcao(`Cadastro de ${email} recusado.`, "ok");
+        } else {
+            mostrarMsgAcao(data.error || "Erro ao recusar.", "erro");
+            botao.disabled = false;
+        }
+    } catch(err){
+        console.error(err);
+        mostrarMsgAcao("Erro de conexão.", "erro");
+        botao.disabled = false;
+    }
+}
+
+function mostrarMsgAcao(texto, tipo){
+    const el = document.getElementById("msgAcao");
+    el.className = "msg " + tipo;
+    el.textContent = texto;
+}
+
+document.getElementById("senhaAdmin").addEventListener("keydown", e => {
+    if(e.key === "Enter") carregarPendentes();
+});
+
+</script>
+
+</body>
+</html>

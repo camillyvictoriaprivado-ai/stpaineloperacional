@@ -55,8 +55,6 @@ body{
     overflow:hidden;
 }
 
-/* linhas sutis de fundo */
-
 body::before{
     content:"";
 
@@ -206,6 +204,10 @@ button:active{
     font-weight:600;
 }
 
+.msg.info{
+    color:#fbbf24;
+}
+
 .footer{
     margin-top:25px;
 
@@ -214,6 +216,16 @@ button:active{
     color:rgba(255,255,255,.45);
 
     font-size:12px;
+}
+
+.footer a{
+    color:rgba(255,255,255,.75);
+    font-weight:700;
+    text-decoration:none;
+}
+
+.footer a:hover{
+    text-decoration:underline;
 }
 
 @media(max-width:480px){
@@ -245,34 +257,58 @@ button:active{
     <div class="msg" id="msg"></div>
 
     <div class="footer">
-        Portal Operacional ST
+        Portal Operacional ST<br><br>
+        Não tem conta? <a href="cadastro.html">Cadastre-se</a>
     </div>
 
 </div>
 
 <script>
 
+const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec";
+
 async function login(){
+
+    const msg = document.getElementById("msg");
+    msg.className = "msg";
+    msg.textContent = "";
 
     const user = document.getElementById("user").value.trim();
     const pass = document.getElementById("pass").value.trim();
 
-    const url = `https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec?type=login&email=${user}&senha=${pass}`;
+    if(!user || !pass){
+        msg.textContent = "Preencha usuário e senha.";
+        return;
+    }
 
-    const res = await fetch(url);
-    const data = await res.json();
+    const url = `${API_URL}?type=login&email=${encodeURIComponent(user)}&senha=${encodeURIComponent(pass)}`;
 
-    if(data.status === "ok"){
+    try {
+        const res = await fetch(url);
+        const data = await res.json();
 
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("nivel", data.nivel);
+        if(data.status === "ok"){
 
-        window.location.href = "painel.html";
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("nivel", data.nivel);
 
-    } else {
-        alert("Login inválido");
+            window.location.href = "painel.html";
+
+        } else if (data.status === "pendente") {
+            msg.className = "msg info";
+            msg.textContent = "Seu cadastro ainda não foi aprovado pelo administrador.";
+        } else {
+            msg.textContent = "Usuário ou senha inválidos.";
+        }
+    } catch (err) {
+        console.error(err);
+        msg.textContent = "Não foi possível conectar. Tente novamente.";
     }
 }
+
+document.getElementById("pass").addEventListener("keydown", e => {
+    if (e.key === "Enter") login();
+});
 
 </script>
 
