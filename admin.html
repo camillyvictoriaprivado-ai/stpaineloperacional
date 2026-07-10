@@ -154,7 +154,13 @@ select{
 const API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec";
 
 // Edite esta lista para refletir os níveis que existem no seu sistema.
-const NIVEIS_DISPONIVEIS = ["admin", "sc", "rs", "almoxarifado"];
+// value = o que é gravado na planilha (coluna "nivel") | label = o que aparece no select
+const NIVEIS_DISPONIVEIS = [
+    { value: "admin_sc",    label: "Admin SC" },
+    { value: "admin_rs",    label: "Admin RS" },
+    { value: "usuario_sc",  label: "Usuário SC" },
+    { value: "usuario_rs",  label: "Usuário RS" },
+];
 
 let senhaAtual = "adminsalatecnica";
 
@@ -205,7 +211,7 @@ function renderizarPendentes(pendentes){
             </div>
             <div class="acoes">
                 <select class="select-nivel">
-                    ${NIVEIS_DISPONIVEIS.map(n => `<option value="${n}">${n}</option>`).join("")}
+                    ${NIVEIS_DISPONIVEIS.map(n => `<option value="${n.value}">${n.label}</option>`).join("")}
                 </select>
                 <button class="btn-aprovar" onclick="aprovar('${u.email}', this)">Aprovar</button>
                 <button class="btn-reprovar" onclick="reprovar('${u.email}', this)">Recusar</button>
