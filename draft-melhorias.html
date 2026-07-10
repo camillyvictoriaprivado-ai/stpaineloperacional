@@ -544,6 +544,7 @@ table.mini td{ padding:8px 12px; color:#374151; vertical-align:middle; border-to
 
     <div id="kpiBar" class="kpi-bar"></div>
     <div id="statusBreakdown" class="status-breakdown-bar"></div>
+    <div id="aprovadoHqBar" class="charts-grid" style="margin-top:12px;"></div>
 
     <div class="tabs">
         <button class="tab-btn active" data-tab="fila" onclick="switchTab('fila')">Fila de Aprovação</button>
@@ -761,6 +762,74 @@ function renderStatusBreakdown(){
 }
 
 /* ==========================================================
+   RENDER: CUSTOS — STATUS MEDIÇÃO = APROVADO HQ (por Cluster / Primária)
+   ========================================================== */
+function renderAprovadoHqCusto(){
+    const dados = dadosGlobais.filter(d => norm(d["status medicao"]) === "APROVADO HQ");
+
+    function agruparCusto(list, key){
+        const map = new Map();
+        list.forEach(d => {
+            const label = (d[key] || "").toString().trim() || "Sem Info";
+            if(!map.has(label)) map.set(label, { mo:0, mat:0, total:0 });
+            const g = map.get(label);
+            g.mo += parseCusto(d["custo mo"]);
+            g.mat += parseCusto(d["custo material"]);
+            g.total += parseCusto(d["custo total"]);
+        });
+        return [...map.entries()].map(([label, v]) => ({ label, ...v })).sort((a,b) => b.total - a.total);
+    }
+
+    function tabelaHtml(titulo, rows, colLabel){
+        const totalMO = rows.reduce((s,r)=>s+r.mo,0);
+        const totalMat = rows.reduce((s,r)=>s+r.mat,0);
+        const totalTotal = rows.reduce((s,r)=>s+r.total,0);
+        const bodyRows = rows.length ? rows.map(r => `
+            <tr>
+                <td>${esc(r.label)}</td>
+                <td class="mono" style="text-align:right;">${fmtBRL(r.mo)}</td>
+                <td class="mono" style="text-align:right;">${fmtBRL(r.mat)}</td>
+                <td class="mono" style="text-align:right;font-weight:700;">${fmtBRL(r.total)}</td>
+            </tr>`).join("") : `<tr><td colspan="4" style="text-align:center;color:var(--muted-2);padding:16px;">Sem dados</td></tr>`;
+        return `
+        <div class="table-card">
+            <div style="padding:16px 20px 0;font-size:11px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:8px;">
+                <span style="width:3px;height:12px;border-radius:2px;background:#f97316;display:inline-block;"></span>
+                ${titulo} — Aprovado HQ
+            </div>
+            <div style="max-height:340px;overflow:auto;margin-top:12px;">
+                <table class="data">
+                    <thead>
+                        <tr>
+                            <th>${colLabel}</th>
+                            <th style="text-align:right;">Custo MO</th>
+                            <th style="text-align:right;">Custo Material</th>
+                            <th style="text-align:right;">Custo Total</th>
+                        </tr>
+                    </thead>
+                    <tbody style="filter:${loading?'blur(4px)':'none'}">${bodyRows}</tbody>
+                    <tfoot>
+                        <tr style="background:#f8fafc;font-weight:800;">
+                            <td>Total</td>
+                            <td class="mono" style="text-align:right;">${fmtBRL(totalMO)}</td>
+                            <td class="mono" style="text-align:right;">${fmtBRL(totalMat)}</td>
+                            <td class="mono" style="text-align:right;">${fmtBRL(totalTotal)}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>`;
+    }
+
+    const porCluster = agruparCusto(dados, "cluster");
+    const porPrimaria = agruparCusto(dados, "primarias");
+
+    document.getElementById("aprovadoHqBar").innerHTML =
+        tabelaHtml("Custo por Cluster", porCluster, "Cluster") +
+        tabelaHtml("Custo por Primária", porPrimaria, "Primária");
+}
+
+/* ==========================================================
    TAB SWITCH
    ========================================================== */
 function switchTab(tab){
@@ -800,6 +869,7 @@ function renderAll(){
     renderHeaderStatus();
     renderKPIBar();
     renderStatusBreakdown();
+    renderAprovadoHqCusto();
     const blocked = renderStatusArea();
     if(!blocked) renderActiveTab();
 }
