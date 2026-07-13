@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Relatório Gerencial — Melhorias de Rede (RS)</title>
 
+<script src="auth.js"></script>
+<script>protegerPagina(["admin_sc", "admin_rs", "usuario_rs"]);</script>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
@@ -48,6 +51,12 @@ body{
     font-family:'Inter',sans-serif;
     color:var(--text);
     -webkit-font-smoothing:antialiased;
+    opacity:0;
+    transition:opacity .15s ease;
+}
+
+body.auth-ready{
+    opacity:1;
 }
 
 .wrap{
