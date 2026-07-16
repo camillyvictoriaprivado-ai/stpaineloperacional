@@ -103,6 +103,33 @@
   .kpi-value{ font-size:28px; font-weight:900; color:var(--navy); letter-spacing:-.03em; }
   .kpi-sub{ font-size:11px; color:var(--muted-2); margin-top:4px; }
 
+  /* ===== Status breakdown cards (por UF) ===== */
+  .status-breakdown-bar{ display:flex; flex-wrap:wrap; gap:12px; margin-top:10px; }
+  .status-breakdown-card{
+    background:white; border-radius:16px; padding:16px 20px; border:1px solid var(--border);
+    box-shadow:0 1px 3px rgba(15,23,42,.05); flex:1; min-width:260px;
+  }
+  .status-breakdown-title{
+    font-size:11px; font-weight:800; color:var(--navy); text-transform:uppercase;
+    letter-spacing:.06em; margin-bottom:12px; display:flex; align-items:center; gap:8px;
+  }
+  .status-breakdown-title::before{
+    content:""; width:3px; height:12px; border-radius:2px; background:var(--accent,#6366f1); display:inline-block;
+  }
+  .status-count-row{ display:flex; align-items:center; gap:10px; padding:5px 0; }
+  .status-count-label{
+    flex:0 0 40%; font-size:12px; color:#374151; font-weight:600;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .status-count-track{ flex:1; height:6px; border-radius:3px; background:var(--border-light); overflow:hidden; }
+  .status-count-fill{ height:100%; border-radius:3px; }
+  .status-count-val{ flex:0 0 24px; text-align:right; font-size:12px; font-weight:800; color:var(--navy); font-family:monospace; }
+  .section-label{
+    font-size:12px; font-weight:800; color:var(--navy); text-transform:uppercase; letter-spacing:.06em;
+    display:flex; align-items:center; gap:8px; margin:0 0 10px;
+  }
+  .section-label::before{ content:""; width:3px; height:14px; border-radius:2px; background:linear-gradient(180deg,var(--blue),var(--indigo)); display:inline-block; }
+
   /* ===== Charts ===== */
   .charts-grid{ display:grid; grid-template-columns: 1.3fr 1fr; gap:16px; margin-bottom:16px; }
   .charts-grid-3{ display:grid; grid-template-columns: repeat(3,1fr); gap:16px; margin-bottom:16px; }
@@ -192,6 +219,12 @@
       <div class="kpi-sub" id="kpiLiberadoTrend">—</div>
     </div>
 
+    <div class="kpi-card" style="--kpi-accent:linear-gradient(180deg,#f43f5e,#fb7185);">
+      <div class="kpi-label">Suspensos</div>
+      <div class="kpi-value" id="kpiSuspenso">—</div>
+      <div class="kpi-sub" id="kpiSuspensoTrend">—</div>
+    </div>
+
     <div class="kpi-card" style="--kpi-accent:linear-gradient(180deg,#8b5cf6,#ec4899);">
       <div class="kpi-label">Custo total (medição)</div>
       <div class="kpi-value" id="kpiCusto">—</div>
@@ -264,60 +297,20 @@
     </div>
   </section>
 
-  <!-- Charts row 3 - detalhamento por UF -->
-  <section class="charts-grid-3">
-    <div class="chart-card">
-      <div class="chart-head">
-        <div>
-          <div class="chart-title">Status × UF</div>
-          <div class="chart-sub">Fila pruma detalhada por UF</div>
-        </div>
-      </div>
-      <div class="chart-box" style="height:230px;"><canvas id="chartStatusUf"></canvas></div>
-    </div>
-
-    <div class="chart-card">
-      <div class="chart-head">
-        <div>
-          <div class="chart-title">Fila draft × UF</div>
-          <div class="chart-sub">Etapas do draft por UF</div>
-        </div>
-      </div>
-      <div class="chart-box" style="height:230px;"><canvas id="chartDraftUf"></canvas></div>
-    </div>
-
-    <div class="chart-card">
-      <div class="chart-head">
-        <div>
-          <div class="chart-title">Fila medição × UF</div>
-          <div class="chart-sub">Etapas da medição por UF</div>
-        </div>
-      </div>
-      <div class="chart-box" style="height:230px;"><canvas id="chartMedicaoUf"></canvas></div>
-    </div>
+  <!-- Detalhamento por UF (cards no padrão do draft-melhorias) -->
+  <section style="margin-bottom:28px;">
+    <div class="section-label">Status por UF</div>
+    <div id="statusUfBox" class="status-breakdown-bar"></div>
   </section>
 
-  <!-- Resumo: total por UF e ID mais repetido -->
-  <section class="charts-grid">
-    <div class="chart-card">
-      <div class="chart-head">
-        <div>
-          <div class="chart-title">Total de prumada por UF</div>
-          <div class="chart-sub">Quantidade de registros em cada UF, considerando os filtros ativos</div>
-        </div>
-      </div>
-      <div id="totalUfBox" class="legend-list" style="margin-top:6px;"></div>
-    </div>
+  <section style="margin-bottom:28px;">
+    <div class="section-label">Fila draft por UF</div>
+    <div id="draftUfBox" class="status-breakdown-bar"></div>
+  </section>
 
-    <div class="chart-card">
-      <div class="chart-head">
-        <div>
-          <div class="chart-title">ID OSP mais repetido</div>
-          <div class="chart-sub">Maior quantidade de ocorrências e status atual</div>
-        </div>
-      </div>
-      <div id="idRepetidoBox"></div>
-    </div>
+  <section style="margin-bottom:28px;">
+    <div class="section-label">Fila medição por UF</div>
+    <div id="medicaoUfBox" class="status-breakdown-bar"></div>
   </section>
 
   <!-- Table -->
@@ -334,6 +327,8 @@
       <select id="filterUf"><option value="">UF · Todas</option></select>
       <select id="filterParceiro"><option value="">Parceiro · Todos</option></select>
       <select id="filterStatus"><option value="">Fila pruma · Todos</option></select>
+      <select id="filterDraft"><option value="">Fila draft · Todos</option></select>
+      <select id="filterMedicao"><option value="">Fila medição · Todos</option></select>
       <input id="filterSearch" placeholder="Filtrar por endereço ou código...">
     </div>
 
@@ -347,6 +342,7 @@
             <th>Código pruma</th>
             <th>Fila pruma</th>
             <th>Fila draft</th>
+            <th>Fila medição</th>
             <th>Data</th>
             <th style="text-align:right;">Custo total</th>
             <th style="text-align:right;">Valor parceiro</th>
@@ -461,6 +457,10 @@ const monthLabel = (key) => {
   return meses[parseInt(m,10)-1] + "/" + y.slice(2);
 };
 
+function esc(v){
+  return String(v == null ? "" : v).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+}
+
 function statusTag(status){
   if(!status) return `<span class="badge badge-gray">—</span>`;
   const s = status.toUpperCase();
@@ -501,6 +501,8 @@ function renderKpis(rows){
   const total = rows.length;
   const liberado = rows.filter(r => (r.filaPruma||"").toUpperCase().includes("LIBERADO")).length;
   const pctLiberado = total ? Math.round((liberado/total)*1000)/10 : 0;
+  const suspenso = rows.filter(r => (r.filaPruma||"").toUpperCase().includes("SUSPENSO")).length;
+  const pctSuspenso = total ? Math.round((suspenso/total)*1000)/10 : 0;
   const custoTotal = sum(rows, 'total');
   const valorParceiro = sum(rows, 'valorParceiro');
   const parceirosUnicos = new Set(rows.map(r => r.parceiro).filter(Boolean)).size;
@@ -510,6 +512,9 @@ function renderKpis(rows){
 
   document.getElementById('kpiLiberado').textContent = pctLiberado + '%';
   document.getElementById('kpiLiberadoTrend').textContent = liberado + ' de ' + total;
+
+  document.getElementById('kpiSuspenso').textContent = pctSuspenso + '%';
+  document.getElementById('kpiSuspensoTrend').textContent = suspenso + ' de ' + total;
 
   document.getElementById('kpiCusto').textContent = fmtBRL(custoTotal);
 
@@ -660,97 +665,52 @@ function renderUf(rows){
 /* ===== Agrupamento por UF (status / draft / medição) ===== */
 const ufColorMap = { SC: '#3b82f6', RS: '#f5a524' };
 
-function groupCount(rows, catKey, seriesKey){
-  const map = {};
-  const catsSet = new Set();
-  const seriesSet = new Set();
-  rows.forEach(r => {
-    const cat = r[catKey] || 'Não informado';
-    const series = r[seriesKey] || 'Não informado';
-    catsSet.add(cat);
-    seriesSet.add(series);
-    if(!map[cat]) map[cat] = {};
-    map[cat][series] = (map[cat][series] || 0) + 1;
-  });
-  return { categories: Array.from(catsSet), series: Array.from(seriesSet), map };
-}
+/* Cards de status por UF, no mesmo padrão visual do draft-melhorias
+   (status-breakdown-card): um card por UF, com barras de contagem
+   para cada valor do campo analisado (fila pruma / draft / medição). */
+function renderUfBreakdownCards(containerId, rows, fieldKey){
+  const box = document.getElementById(containerId);
+  const ufs = [...new Set(rows.map(r => r.uf).filter(Boolean))].sort();
 
-function renderGroupedBar(canvasId, rows, catKey, seriesKey){
-  const { categories, series, map } = groupCount(rows, catKey, seriesKey);
-
-  const sortedCats = categories.sort((a, b) => {
-    const totalA = series.reduce((s, se) => s + ((map[a] && map[a][se]) || 0), 0);
-    const totalB = series.reduce((s, se) => s + ((map[b] && map[b][se]) || 0), 0);
-    return totalB - totalA;
-  });
-
-  const labels = sortedCats.map(c => c.length > 20 ? c.slice(0, 20) + '…' : c);
-  const datasets = series.map((s, i) => ({
-    label: s,
-    data: sortedCats.map(c => (map[c] && map[c][s]) || 0),
-    backgroundColor: ufColorMap[String(s).toUpperCase()] || palette[i % palette.length],
-    borderRadius: 5,
-    maxBarThickness: 30,
-  }));
-
-  buildChart(canvasId, {
-    type: 'bar',
-    data: { labels, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: true, position: 'bottom', labels: { color: chartDefaults.color, boxWidth: 10, font: { size: 11 } } },
-        tooltip: { backgroundColor: '#0f172a', borderColor: '#1e293b', borderWidth: 1, padding: 10, titleColor: '#fff', bodyColor: '#e2e8f0' }
-      },
-      scales: {
-        x: { stacked: true, ticks: { color: chartDefaults.color, font: { size: 10 }, maxRotation: 30, minRotation: 0 }, grid: { display: false } },
-        y: { stacked: true, beginAtZero: true, ticks: { color: chartDefaults.color, font: { size: 11 }, precision: 0 }, grid: { color: chartDefaults.gridColor } }
-      }
-    }
-  });
-}
-
-function renderStatusUf(rows){ renderGroupedBar('chartStatusUf', rows, 'filaPruma', 'uf'); }
-function renderDraftUf(rows){ renderGroupedBar('chartDraftUf', rows, 'filaDraft', 'uf'); }
-function renderMedicaoUf(rows){ renderGroupedBar('chartMedicaoUf', rows, 'filaMedicao', 'uf'); }
-
-function renderTotalUf(rows){
-  const map = count(rows, 'uf');
-  const entries = Object.entries(map).sort((a, b) => b[1] - a[1]);
-  const box = document.getElementById('totalUfBox');
-  box.innerHTML = entries.map(([uf, qtd], i) => {
-    const color = ufColorMap[String(uf).toUpperCase()] || palette[i % palette.length];
-    return `<div class="legend-item"><span class="legend-dot" style="background:${color}"></span>${uf} · <strong style="color:#fff;">${qtd}</strong></div>`;
-  }).join('');
-}
-
-function renderIdRepetido(rows){
-  const freq = {};
-  rows.forEach(r => {
-    if(!r.idOsp) return;
-    const id = String(r.idOsp);
-    freq[id] = (freq[id] || 0) + 1;
-  });
-  const entries = Object.entries(freq).sort((a, b) => b[1] - a[1]);
-  const box = document.getElementById('idRepetidoBox');
-
-  if(!entries.length || entries[0][1] <= 1){
-    box.innerHTML = `<div class="card-sub">Nenhum ID OSP repetido nos registros filtrados.</div>`;
+  if(!ufs.length){
+    box.innerHTML = `<div class="status-breakdown-card"><div style="font-size:12px;color:var(--muted-2);">Sem dados para os filtros aplicados.</div></div>`;
     return;
   }
 
-  const [topId, qtd] = entries[0];
-  const related = rows.filter(r => String(r.idOsp) === topId);
-  const draftStatuses = [...new Set(related.map(r => r.filaDraft).filter(Boolean))];
-  const medicaoStatuses = [...new Set(related.map(r => r.filaMedicao).filter(Boolean))];
+  box.innerHTML = ufs.map(uf => {
+    const subset = rows.filter(r => r.uf === uf);
+    const total = subset.length;
+    const accent = ufColorMap[String(uf).toUpperCase()] || '#6366f1';
 
-  box.innerHTML = `
-    <div class="repetido-id">${topId}</div>
-    <div class="repetido-qtd">${qtd} ocorrências no total filtrado</div>
-    <div class="repetido-row"><span class="repetido-lbl">Fila draft:</span>${draftStatuses.join(', ') || '—'}</div>
-    <div class="repetido-row"><span class="repetido-lbl">Fila medição:</span>${medicaoStatuses.join(', ') || '—'}</div>
-  `;
+    const counts = new Map();
+    subset.forEach(r => {
+      const raw = (r[fieldKey] || '').toString().trim();
+      const label = raw || 'Não informado';
+      counts.set(label, (counts.get(label) || 0) + 1);
+    });
+    const rowsArr = [...counts.entries()].sort((a,b) => b[1]-a[1]);
+
+    const rowsHtml = rowsArr.map(([label, c]) => {
+      const pct = total ? Math.round(c/total*100) : 0;
+      return `
+      <div class="status-count-row">
+        <div class="status-count-label" title="${esc(label)}">${esc(label)}</div>
+        <div class="status-count-track"><div class="status-count-fill" style="width:${pct}%;background:${accent};"></div></div>
+        <div class="status-count-val">${c}</div>
+      </div>`;
+    }).join('');
+
+    return `
+    <div class="status-breakdown-card" style="--accent:${accent}">
+      <div class="status-breakdown-title">${esc(uf)} <span style="font-weight:600;color:var(--muted-2);text-transform:none;letter-spacing:0;">· ${total} registros</span></div>
+      ${rowsHtml || '<div style="font-size:12px;color:var(--muted-2);padding:8px 0;">Sem dados</div>'}
+    </div>`;
+  }).join('');
 }
+
+function renderStatusUf(rows){ renderUfBreakdownCards('statusUfBox', rows, 'filaPruma'); }
+function renderDraftUf(rows){ renderUfBreakdownCards('draftUfBox', rows, 'filaDraft'); }
+function renderMedicaoUf(rows){ renderUfBreakdownCards('medicaoUfBox', rows, 'filaMedicao'); }
 
 /* ===== Pipeline único: recalcula tudo (KPIs, gráficos e tabela) =====
    Cada etapa roda isolada: se uma falhar (ex: dado inesperado vindo do
@@ -771,18 +731,16 @@ function renderAll(rows){
   safeRender(renderParceiro, rows, 'Por parceiro');
   safeRender(renderDraft, rows, 'Fila draft');
   safeRender(renderUf, rows, 'SC × RS');
-  safeRender(renderStatusUf, rows, 'Status × UF');
-  safeRender(renderDraftUf, rows, 'Fila draft × UF');
-  safeRender(renderMedicaoUf, rows, 'Fila medição × UF');
-  safeRender(renderTotalUf, rows, 'Total por UF');
-  safeRender(renderIdRepetido, rows, 'ID mais repetido');
+  safeRender(renderStatusUf, rows, 'Status por UF');
+  safeRender(renderDraftUf, rows, 'Fila draft por UF');
+  safeRender(renderMedicaoUf, rows, 'Fila medição por UF');
   safeRender(renderTable, rows, 'Tabela');
 }
 
 function renderTable(rows){
   const tbody = document.getElementById('tableBody');
   if(!rows.length){
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--text-mute);padding:30px;">Nenhum registro encontrado para os filtros aplicados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--text-mute);padding:30px;">Nenhum registro encontrado para os filtros aplicados.</td></tr>`;
   } else {
     tbody.innerHTML = rows.map(r => `
       <tr>
@@ -792,6 +750,7 @@ function renderTable(rows){
         <td class="mono">${r.codigoPruma ?? '—'}</td>
         <td>${statusTag(r.filaPruma)}</td>
         <td>${r.filaDraft || '—'}</td>
+        <td>${r.filaMedicao || '—'}</td>
         <td class="mono">${fmtDate(r.data)}</td>
         <td class="mono" style="text-align:right;">${fmtBRLFull(r.total)}</td>
         <td class="mono" style="text-align:right;">${fmtBRLFull(r.valorParceiro)}</td>
@@ -806,12 +765,16 @@ function applyFilters(){
   const uf = document.getElementById('filterUf').value;
   const parceiro = document.getElementById('filterParceiro').value;
   const status = document.getElementById('filterStatus').value;
+  const draft = document.getElementById('filterDraft').value;
+  const medicao = document.getElementById('filterMedicao').value;
   const search = (document.getElementById('filterSearch').value || '').toLowerCase();
 
   const filtered = ROWS.filter(r => {
     if(uf && r.uf !== uf) return false;
     if(parceiro && r.parceiro !== parceiro) return false;
     if(status && r.filaPruma !== status) return false;
+    if(draft && r.filaDraft !== draft) return false;
+    if(medicao && r.filaMedicao !== medicao) return false;
     if(search){
       const hay = `${r.endereco||''} ${r.codigoPruma||''}`.toLowerCase();
       if(!hay.includes(search)) return false;
@@ -841,10 +804,12 @@ async function init(){
   populateSelect('filterUf', [...new Set(ROWS.map(r=>r.uf).filter(Boolean))].sort());
   populateSelect('filterParceiro', [...new Set(ROWS.map(r=>r.parceiro).filter(Boolean))].sort());
   populateSelect('filterStatus', [...new Set(ROWS.map(r=>r.filaPruma).filter(Boolean))].sort());
+  populateSelect('filterDraft', [...new Set(ROWS.map(r=>r.filaDraft).filter(Boolean))].sort());
+  populateSelect('filterMedicao', [...new Set(ROWS.map(r=>r.filaMedicao).filter(Boolean))].sort());
 
   renderAll(ROWS);
 
-  ['filterUf','filterParceiro','filterStatus','filterSearch'].forEach(id => {
+  ['filterUf','filterParceiro','filterStatus','filterDraft','filterMedicao','filterSearch'].forEach(id => {
     document.getElementById(id).addEventListener('input', applyFilters);
   });
   document.getElementById('refreshBtn').addEventListener('click', () => init());
