@@ -615,6 +615,16 @@ function pickCusto(d, keys){
     }
     return 0;
 }
+// Mapa: nome da coluna (usado em sort/exportação) -> lista de chaves possíveis no backend
+const COST_FIELD_MAP = {
+    "custo mo": ["valor mo", "custo mo"],
+    "custo material": ["valor material", "custo material"],
+    "custo total": ["valor total orcado", "custo total"],
+};
+function displayCusto(d, keys){
+    const v = pickCusto(d, keys);
+    return v ? fmtBRL(v) : "—";
+}
 function fmtBRL(v){
     return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
@@ -973,7 +983,7 @@ function buildObras(dados){
         const draftStatus = getDraftStatus(draftStatusRaw);
         const cluster = (armarios[0] && armarios[0].cluster) || "";
         const primarias = (armarios[0] && armarios[0].primarias) || "";
-        const totalCusto = armarios.reduce((s,a)=>s+parseCusto(a["custo total"]),0);
+        const totalCusto = armarios.reduce((s,a)=>s+pickCusto(a, COST_FIELD_MAP["custo total"]),0);
         return { id, armarios, campoOk, canAdvanceDraft, draftStatus, draftStatusRaw, cluster, primarias, totalCusto, pendingArmarios, aprovadosCount };
     });
 }
@@ -1120,9 +1130,9 @@ function renderObraRows(o, idx){
             <td><span class="badge ${cb.cls}">${cb.label}</span></td>
             <td><span class="badge ${db2.cls}">${db2.icon} ${esc(a["status draft"] || "—")}</span></td>
             <td><span style="font-size:11px;font-weight:600;color:#475569;">${esc(a["status medicao"] || "—")}</span></td>
-            <td class="mono">${esc(a["custo mo"] || "—")}</td>
-            <td class="mono">${esc(a["custo material"] || "—")}</td>
-            <td class="mono" style="text-align:right;font-weight:700;">${esc(a["custo total"] || "—")}</td>
+            <td class="mono">${displayCusto(a, COST_FIELD_MAP["custo mo"])}</td>
+            <td class="mono">${displayCusto(a, COST_FIELD_MAP["custo material"])}</td>
+            <td class="mono" style="text-align:right;font-weight:700;">${displayCusto(a, COST_FIELD_MAP["custo total"])}</td>
         </tr>`;
     }).join("");
 
@@ -1186,9 +1196,9 @@ function renderGraficos(){
     dados.forEach(d=>{
         const k = normDisplay(d.cluster);
         if(!custoMap[k]) custoMap[k] = { mo:0, mat:0, total:0 };
-        custoMap[k].mo += parseCusto(d["custo mo"]);
-        custoMap[k].mat += parseCusto(d["custo material"]);
-        custoMap[k].total += parseCusto(d["custo total"]);
+        custoMap[k].mo += pickCusto(d, COST_FIELD_MAP["custo mo"]);
+        custoMap[k].mat += pickCusto(d, COST_FIELD_MAP["custo material"]);
+        custoMap[k].total += pickCusto(d, COST_FIELD_MAP["custo total"]);
     });
     const custoPorCluster = Object.entries(custoMap).sort((a,b)=>b[1].total-a[1].total).map(([name,v])=>({name,...v}));
 
@@ -1349,7 +1359,8 @@ function renderTabela(){
         list = [...list].sort((a,b)=>{
             const av = a[key] || "", bv = b[key] || "";
             if(key==="custo total" || key==="custo mo" || key==="custo material"){
-                return tabelaState.sortAsc ? parseCusto(av)-parseCusto(bv) : parseCusto(bv)-parseCusto(av);
+                const keys = COST_FIELD_MAP[key];
+                return tabelaState.sortAsc ? pickCusto(a,keys)-pickCusto(b,keys) : pickCusto(b,keys)-pickCusto(a,keys);
             }
             return tabelaState.sortAsc ? String(av).localeCompare(String(bv),"pt-BR") : String(bv).localeCompare(String(av),"pt-BR");
         });
@@ -1359,9 +1370,9 @@ function renderTabela(){
     if(tabelaState.page >= totalPages) tabelaState.page = Math.max(0, totalPages-1);
     const paginated = list.slice(tabelaState.page*tabelaState.perPage, (tabelaState.page+1)*tabelaState.perPage);
 
-    const totalCusto = list.reduce((s,d)=>s+parseCusto(d["custo total"]),0);
-    const totalMO = list.reduce((s,d)=>s+parseCusto(d["custo mo"]),0);
-    const totalMat = list.reduce((s,d)=>s+parseCusto(d["custo material"]),0);
+    const totalCusto = list.reduce((s,d)=>s+pickCusto(d, ["valor total orcado", "custo total"]),0);
+    const totalMO = list.reduce((s,d)=>s+pickCusto(d, ["valor mo", "custo mo"]),0);
+    const totalMat = list.reduce((s,d)=>s+pickCusto(d, ["valor material", "custo material"]),0);
 
     function sortIcon(key){ return tabelaState.sortKey===key ? (tabelaState.sortAsc ? "↑" : "↓") : "↕"; }
     function th(key,label){ return `<th class="sortable" onclick="toggleSort('${key}')">${label} <span style="opacity:${tabelaState.sortKey===key?1:.3}">${sortIcon(key)}</span></th>`; }
@@ -1384,9 +1395,9 @@ function renderTabela(){
             <td>${statusBadge(d["status campo"], STATUS_CAMPO_CLS)}</td>
             <td>${statusBadge(d["status draft"], STATUS_DRAFT_CLS)}</td>
             <td><span style="font-size:11px;font-weight:600;color:#475569;">${esc(d["status medicao"]||"—")}</span></td>
-            <td class="mono" style="text-align:right;">${esc(d["custo mo"]||"—")}</td>
-            <td class="mono" style="text-align:right;">${esc(d["custo material"]||"—")}</td>
-            <td class="mono" style="text-align:right;font-weight:700;">${esc(d["custo total"]||"—")}</td>
+            <td class="mono" style="text-align:right;">${displayCusto(d, COST_FIELD_MAP["custo mo"])}</td>
+            <td class="mono" style="text-align:right;">${displayCusto(d, COST_FIELD_MAP["custo material"])}</td>
+            <td class="mono" style="text-align:right;font-weight:700;">${displayCusto(d, COST_FIELD_MAP["custo total"])}</td>
             <td style="color:var(--muted);">${esc(d.requicao||"—")}</td>
         </tr>`).join("");
 
@@ -1502,7 +1513,7 @@ function exportCSV(){
     const rows = dados.map(d => [
         d["id obra"], d.empresa, d.armario, d.cluster, d.primarias,
         d["status campo"], d["status draft"], d["status medicao"],
-        d["custo mo"], d["custo material"], d["custo total"], d.requicao,
+        pickCusto(d, COST_FIELD_MAP["custo mo"]) || "", pickCusto(d, COST_FIELD_MAP["custo material"]) || "", pickCusto(d, COST_FIELD_MAP["custo total"]) || "", d.requicao,
     ].map(v => `"${String(v||"").replace(/"/g,'""')}"`).join(","));
 
     const csv = [headers.join(","), ...rows].join("\n");
