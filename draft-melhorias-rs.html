@@ -176,14 +176,15 @@ body.auth-ready{
 .status-breakdown-title::before{
     content:""; width:3px; height:12px; border-radius:2px; background:var(--accent,#6366f1); display:inline-block;
 }
-.status-count-row{ display:flex; align-items:center; gap:10px; padding:5px 0; }
+.status-count-row{ display:flex; align-items:flex-start; gap:10px; padding:5px 0; }
 .status-count-label{
     flex:0 0 40%; font-size:12px; color:#374151; font-weight:600;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    white-space:normal; overflow-wrap:break-word; word-break:break-word; line-height:1.3;
+    padding-top:1px;
 }
-.status-count-track{ flex:1; height:6px; border-radius:3px; background:var(--border-light); overflow:hidden; }
+.status-count-track{ flex:1; height:6px; border-radius:3px; background:var(--border-light); overflow:hidden; margin-top:6px; align-self:flex-start; }
 .status-count-fill{ height:100%; border-radius:3px; }
-.status-count-val{ flex:0 0 24px; text-align:right; font-size:12px; font-weight:800; color:var(--navy); font-family:monospace; }
+.status-count-val{ flex:0 0 28px; text-align:right; font-size:12px; font-weight:800; color:var(--navy); font-family:monospace; padding-top:1px; }
 
 /* TABS */
 .tabs{ display:flex; gap:4px; margin:24px 0 20px; border-bottom:1px solid var(--border); }
@@ -605,6 +606,25 @@ function normDisplay(s){
 function parseCusto(v){
     return Number(String(v || "").replace("R$", "").replace(/\./g, "").replace(",", ".").trim()) || 0;
 }
+// Tenta várias chaves possíveis para o mesmo valor (o backend pode nomear a coluna
+// de formas diferentes: "valor mo" vs "custo mo", etc). Retorna a primeira que tiver valor.
+function pickCusto(d, keys){
+    for(const k of keys){
+        const val = parseCusto(d[k]);
+        if(val) return val;
+    }
+    return 0;
+}
+// Mapa: nome da coluna (usado em sort/exportação) -> lista de chaves possíveis no backend
+const COST_FIELD_MAP = {
+    "custo mo": ["valor mo", "custo mo"],
+    "custo material": ["valor material", "custo material"],
+    "custo total": ["valor total orcado", "custo total"],
+};
+function displayCusto(d, keys){
+    const v = pickCusto(d, keys);
+    return v ? fmtBRL(v) : "—";
+}
 function fmtBRL(v){
     return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
@@ -705,9 +725,9 @@ function renderKPIBar(){
         if(sd==="APROVADO") draftAprovado++;
         else if(sd==="PENDENTE"||sd==="") draftPendente++;
 
-        custoMO += parseCusto(d["custo mo"]);
-        custoMat += parseCusto(d["custo material"]);
-        custoTotal += parseCusto(d["custo total"]);
+        custoMO += pickCusto(d, ["valor mo", "custo mo"]);
+        custoMat += pickCusto(d, ["valor material", "custo material"]);
+        custoTotal += pickCusto(d, ["valor total orcado", "custo total"]);
     });
 
     const cards = [
@@ -774,32 +794,31 @@ function renderStatusBreakdown(){
    RENDER: CUSTOS — STATUS MEDIÇÃO = APROVADO HQ (por Cluster / Primária)
    ========================================================== */
 function renderAprovadoHqCusto(){
-    const dados = dadosGlobais.filter(d => norm(d["status medicao"]) === "APROVADO HQ");
+    const dadosAprovadoHQ = dadosGlobais.filter(d => norm(d["status medicao"]) === "APROVADO HQ");
+    // "Resumo" considera todos os registros, independente do status (Campo/Draft/Medição)
+    const dadosTodos = dadosGlobais;
 
-    function agruparCusto(list, key){
+    function agruparCustoOriginal(list, key){
         const map = new Map();
         list.forEach(d => {
             const label = (d[key] || "").toString().trim() || "Sem Info";
-            if(!map.has(label)) map.set(label, { mo:0, mat:0, total:0 });
+            if(!map.has(label)) map.set(label, { orcado:0, medido:0 });
             const g = map.get(label);
-            g.mo += parseCusto(d["custo mo"]);
-            g.mat += parseCusto(d["custo material"]);
-            g.total += parseCusto(d["custo total"]);
+            g.orcado += parseCusto(d["valor total orcado"]);
+            g.medido += parseCusto(d["valor total medido"]);
         });
-        return [...map.entries()].map(([label, v]) => ({ label, ...v })).sort((a,b) => b.total - a.total);
+        return [...map.entries()].map(([label, v]) => ({ label, ...v })).sort((a,b) => b.medido - a.medido);
     }
 
-    function tabelaHtml(titulo, rows, colLabel){
-        const totalMO = rows.reduce((s,r)=>s+r.mo,0);
-        const totalMat = rows.reduce((s,r)=>s+r.mat,0);
-        const totalTotal = rows.reduce((s,r)=>s+r.total,0);
+    function tabelaHtmlOriginal(titulo, rows, colLabel){
+        const totalOrcado = rows.reduce((s,r)=>s+r.orcado,0);
+        const totalMedido = rows.reduce((s,r)=>s+r.medido,0);
         const bodyRows = rows.length ? rows.map(r => `
             <tr>
                 <td>${esc(r.label)}</td>
-                <td class="mono" style="text-align:right;">${fmtBRL(r.mo)}</td>
-                <td class="mono" style="text-align:right;">${fmtBRL(r.mat)}</td>
-                <td class="mono" style="text-align:right;font-weight:700;">${fmtBRL(r.total)}</td>
-            </tr>`).join("") : `<tr><td colspan="4" style="text-align:center;color:var(--muted-2);padding:16px;">Sem dados</td></tr>`;
+                <td class="mono" style="text-align:right;">${fmtBRL(r.orcado)}</td>
+                <td class="mono" style="text-align:right;font-weight:700;">${fmtBRL(r.medido)}</td>
+            </tr>`).join("") : `<tr><td colspan="3" style="text-align:center;color:var(--muted-2);padding:16px;">Sem dados</td></tr>`;
         return `
         <div class="table-card">
             <div style="padding:16px 20px 0;font-size:11px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:8px;">
@@ -811,18 +830,16 @@ function renderAprovadoHqCusto(){
                     <thead>
                         <tr>
                             <th>${colLabel}</th>
-                            <th style="text-align:right;">Custo MO</th>
-                            <th style="text-align:right;">Custo Material</th>
-                            <th style="text-align:right;">Custo Total</th>
+                            <th style="text-align:right;">Valor Total Orçado</th>
+                            <th style="text-align:right;">Valor Total Medido</th>
                         </tr>
                     </thead>
                     <tbody style="filter:${loading?'blur(4px)':'none'}">${bodyRows}</tbody>
                     <tfoot>
                         <tr style="background:#f8fafc;font-weight:800;">
                             <td>Total</td>
-                            <td class="mono" style="text-align:right;">${fmtBRL(totalMO)}</td>
-                            <td class="mono" style="text-align:right;">${fmtBRL(totalMat)}</td>
-                            <td class="mono" style="text-align:right;">${fmtBRL(totalTotal)}</td>
+                            <td class="mono" style="text-align:right;">${fmtBRL(totalOrcado)}</td>
+                            <td class="mono" style="text-align:right;">${fmtBRL(totalMedido)}</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -830,12 +847,66 @@ function renderAprovadoHqCusto(){
         </div>`;
     }
 
-    const porCluster = agruparCusto(dados, "cluster");
-    const porPrimaria = agruparCusto(dados, "primarias");
+    function agruparCustoResumo(list, key){
+        const map = new Map();
+        list.forEach(d => {
+            const label = (d[key] || "").toString().trim() || "Sem Info";
+            if(!map.has(label)) map.set(label, { orcado:0, medido:0, faturado:0 });
+            const g = map.get(label);
+            g.orcado += parseCusto(d["valor total orcado"]);
+            g.medido += parseCusto(d["valor total medido"]);
+            g.faturado += parseCusto(d["valor faturado total"]);
+        });
+        return [...map.entries()].map(([label, v]) => ({ label, ...v })).sort((a,b) => b.faturado - a.faturado);
+    }
+
+    function tabelaHtmlResumo(titulo, rows, colLabel){
+        const totalOrcado = rows.reduce((s,r)=>s+r.orcado,0);
+        const totalMedido = rows.reduce((s,r)=>s+r.medido,0);
+        const totalFaturado = rows.reduce((s,r)=>s+r.faturado,0);
+        const bodyRows = rows.length ? rows.map(r => `
+            <tr>
+                <td>${esc(r.label)}</td>
+                <td class="mono" style="text-align:right;">${fmtBRL(r.orcado)}</td>
+                <td class="mono" style="text-align:right;">${fmtBRL(r.medido)}</td>
+                <td class="mono" style="text-align:right;font-weight:700;">${fmtBRL(r.faturado)}</td>
+            </tr>`).join("") : `<tr><td colspan="4" style="text-align:center;color:var(--muted-2);padding:16px;">Sem dados</td></tr>`;
+        return `
+        <div class="table-card">
+            <div style="padding:16px 20px 0;font-size:11px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:8px;">
+                <span style="width:3px;height:12px;border-radius:2px;background:#f97316;display:inline-block;"></span>
+                ${titulo}
+            </div>
+            <div style="max-height:340px;overflow:auto;margin-top:12px;">
+                <table class="data">
+                    <thead>
+                        <tr>
+                            <th>${colLabel}</th>
+                            <th style="text-align:right;">Valor Total Orçado</th>
+                            <th style="text-align:right;">Valor Total Medido</th>
+                            <th style="text-align:right;">Valor Faturado Total</th>
+                        </tr>
+                    </thead>
+                    <tbody style="filter:${loading?'blur(4px)':'none'}">${bodyRows}</tbody>
+                    <tfoot>
+                        <tr style="background:#f8fafc;font-weight:800;">
+                            <td>Total</td>
+                            <td class="mono" style="text-align:right;">${fmtBRL(totalOrcado)}</td>
+                            <td class="mono" style="text-align:right;">${fmtBRL(totalMedido)}</td>
+                            <td class="mono" style="text-align:right;">${fmtBRL(totalFaturado)}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>`;
+    }
+
+    const porClusterOriginal = agruparCustoOriginal(dadosAprovadoHQ, "cluster");
+    const porClusterResumo = agruparCustoResumo(dadosTodos, "cluster");
 
     document.getElementById("aprovadoHqBar").innerHTML =
-        tabelaHtml("Medição", porCluster, "Cluster") +
-        tabelaHtml("Medição", porPrimaria, "Primária");
+        tabelaHtmlOriginal("Valor Medido", porClusterOriginal, "Cluster") +
+        tabelaHtmlResumo("Resumo", porClusterResumo, "Cluster");
 }
 
 /* ==========================================================
@@ -904,7 +975,7 @@ function buildObras(dados){
         const draftStatus = getDraftStatus(draftStatusRaw);
         const cluster = (armarios[0] && armarios[0].cluster) || "";
         const primarias = (armarios[0] && armarios[0].primarias) || "";
-        const totalCusto = armarios.reduce((s,a)=>s+parseCusto(a["custo total"]),0);
+        const totalCusto = armarios.reduce((s,a)=>s+pickCusto(a, COST_FIELD_MAP["custo total"]),0);
         return { id, armarios, campoOk, canAdvanceDraft, draftStatus, draftStatusRaw, cluster, primarias, totalCusto, pendingArmarios, aprovadosCount };
     });
 }
@@ -1051,9 +1122,9 @@ function renderObraRows(o, idx){
             <td><span class="badge ${cb.cls}">${cb.label}</span></td>
             <td><span class="badge ${db2.cls}">${db2.icon} ${esc(a["status draft"] || "—")}</span></td>
             <td><span style="font-size:11px;font-weight:600;color:#475569;">${esc(a["status medicao"] || "—")}</span></td>
-            <td class="mono">${esc(a["custo mo"] || "—")}</td>
-            <td class="mono">${esc(a["custo material"] || "—")}</td>
-            <td class="mono" style="text-align:right;font-weight:700;">${esc(a["custo total"] || "—")}</td>
+            <td class="mono">${displayCusto(a, COST_FIELD_MAP["custo mo"])}</td>
+            <td class="mono">${displayCusto(a, COST_FIELD_MAP["custo material"])}</td>
+            <td class="mono" style="text-align:right;font-weight:700;">${displayCusto(a, COST_FIELD_MAP["custo total"])}</td>
         </tr>`;
     }).join("");
 
@@ -1117,9 +1188,9 @@ function renderGraficos(){
     dados.forEach(d=>{
         const k = normDisplay(d.cluster);
         if(!custoMap[k]) custoMap[k] = { mo:0, mat:0, total:0 };
-        custoMap[k].mo += parseCusto(d["custo mo"]);
-        custoMap[k].mat += parseCusto(d["custo material"]);
-        custoMap[k].total += parseCusto(d["custo total"]);
+        custoMap[k].mo += pickCusto(d, COST_FIELD_MAP["custo mo"]);
+        custoMap[k].mat += pickCusto(d, COST_FIELD_MAP["custo material"]);
+        custoMap[k].total += pickCusto(d, COST_FIELD_MAP["custo total"]);
     });
     const custoPorCluster = Object.entries(custoMap).sort((a,b)=>b[1].total-a[1].total).map(([name,v])=>({name,...v}));
 
@@ -1279,7 +1350,8 @@ function renderTabela(){
         list = [...list].sort((a,b)=>{
             const av = a[key] || "", bv = b[key] || "";
             if(key==="custo total" || key==="custo mo" || key==="custo material"){
-                return tabelaState.sortAsc ? parseCusto(av)-parseCusto(bv) : parseCusto(bv)-parseCusto(av);
+                const keys = COST_FIELD_MAP[key];
+                return tabelaState.sortAsc ? pickCusto(a,keys)-pickCusto(b,keys) : pickCusto(b,keys)-pickCusto(a,keys);
             }
             return tabelaState.sortAsc ? String(av).localeCompare(String(bv),"pt-BR") : String(bv).localeCompare(String(av),"pt-BR");
         });
@@ -1289,9 +1361,9 @@ function renderTabela(){
     if(tabelaState.page >= totalPages) tabelaState.page = Math.max(0, totalPages-1);
     const paginated = list.slice(tabelaState.page*tabelaState.perPage, (tabelaState.page+1)*tabelaState.perPage);
 
-    const totalCusto = list.reduce((s,d)=>s+parseCusto(d["custo total"]),0);
-    const totalMO = list.reduce((s,d)=>s+parseCusto(d["custo mo"]),0);
-    const totalMat = list.reduce((s,d)=>s+parseCusto(d["custo material"]),0);
+    const totalCusto = list.reduce((s,d)=>s+pickCusto(d, ["valor total orcado", "custo total"]),0);
+    const totalMO = list.reduce((s,d)=>s+pickCusto(d, ["valor mo", "custo mo"]),0);
+    const totalMat = list.reduce((s,d)=>s+pickCusto(d, ["valor material", "custo material"]),0);
 
     function sortIcon(key){ return tabelaState.sortKey===key ? (tabelaState.sortAsc ? "↑" : "↓") : "↕"; }
     function th(key,label){ return `<th class="sortable" onclick="toggleSort('${key}')">${label} <span style="opacity:${tabelaState.sortKey===key?1:.3}">${sortIcon(key)}</span></th>`; }
@@ -1314,9 +1386,9 @@ function renderTabela(){
             <td>${statusBadge(d["status campo"], STATUS_CAMPO_CLS)}</td>
             <td>${statusBadge(d["status draft"], STATUS_DRAFT_CLS)}</td>
             <td><span style="font-size:11px;font-weight:600;color:#475569;">${esc(d["status medicao"]||"—")}</span></td>
-            <td class="mono" style="text-align:right;">${esc(d["custo mo"]||"—")}</td>
-            <td class="mono" style="text-align:right;">${esc(d["custo material"]||"—")}</td>
-            <td class="mono" style="text-align:right;font-weight:700;">${esc(d["custo total"]||"—")}</td>
+            <td class="mono" style="text-align:right;">${displayCusto(d, COST_FIELD_MAP["custo mo"])}</td>
+            <td class="mono" style="text-align:right;">${displayCusto(d, COST_FIELD_MAP["custo material"])}</td>
+            <td class="mono" style="text-align:right;font-weight:700;">${displayCusto(d, COST_FIELD_MAP["custo total"])}</td>
             <td style="color:var(--muted);">${esc(d.requicao||"—")}</td>
         </tr>`).join("");
 
@@ -1432,7 +1504,7 @@ function exportCSV(){
     const rows = dados.map(d => [
         d["id obra"], d.empresa, d.armario, d.cluster, d.primarias,
         d["status campo"], d["status draft"], d["status medicao"],
-        d["custo mo"], d["custo material"], d["custo total"], d.requicao,
+        pickCusto(d, COST_FIELD_MAP["custo mo"]) || "", pickCusto(d, COST_FIELD_MAP["custo material"]) || "", pickCusto(d, COST_FIELD_MAP["custo total"]) || "", d.requicao,
     ].map(v => `"${String(v||"").replace(/"/g,'""')}"`).join(","));
 
     const csv = [headers.join(","), ...rows].join("\n");
