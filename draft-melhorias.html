@@ -638,6 +638,14 @@ const DRAFT_BADGE = {
 };
 const COLORS = ["#3b82f6","#6366f1","#8b5cf6","#ec4899","#f97316","#10b981","#0ea5e9","#f59e0b","#ef4444"];
 const DRAFT_COLORS = ["#10b981","#f59e0b","#ef4444","#6366f1","#3b82f6","#8b5cf6"];
+// Paleta semântica do gráfico Status Campo: verde = concluído, amarelo = em execução, vermelho = pendente
+const STATUS_CAMPO_COLOR_MAP = { CONCLUIDO:"#22c55e", APROVADO:"#22c55e", EXECUCAO:"#f5a623", PENDENTE:"#ef4444" };
+function getStatusCampoColor(label){
+    const n = norm(label);
+    if(n === "CONCLUIDO" || n === "APROVADO") return STATUS_CAMPO_COLOR_MAP.CONCLUIDO;
+    if(n.includes("EXECU")) return STATUS_CAMPO_COLOR_MAP.EXECUCAO;
+    return STATUS_CAMPO_COLOR_MAP.PENDENTE;
+}
 
 /* ==========================================================
    FETCH
@@ -782,26 +790,23 @@ function renderAprovadoHqCusto(){
         const map = new Map();
         list.forEach(d => {
             const label = (d[key] || "").toString().trim() || "Sem Info";
-            if(!map.has(label)) map.set(label, { mo:0, mat:0, total:0 });
+            if(!map.has(label)) map.set(label, { orcado:0, medido:0 });
             const g = map.get(label);
-            g.mo += parseCusto(d["custo mo"]);
-            g.mat += parseCusto(d["custo material"]);
-            g.total += parseCusto(d["custo total"]);
+            g.orcado += parseCusto(d["valor total orcado"]);
+            g.medido += parseCusto(d["valor total medido"]);
         });
-        return [...map.entries()].map(([label, v]) => ({ label, ...v })).sort((a,b) => b.total - a.total);
+        return [...map.entries()].map(([label, v]) => ({ label, ...v })).sort((a,b) => b.medido - a.medido);
     }
 
     function tabelaHtmlOriginal(titulo, rows, colLabel){
-        const totalMO = rows.reduce((s,r)=>s+r.mo,0);
-        const totalMat = rows.reduce((s,r)=>s+r.mat,0);
-        const totalTotal = rows.reduce((s,r)=>s+r.total,0);
+        const totalOrcado = rows.reduce((s,r)=>s+r.orcado,0);
+        const totalMedido = rows.reduce((s,r)=>s+r.medido,0);
         const bodyRows = rows.length ? rows.map(r => `
             <tr>
                 <td>${esc(r.label)}</td>
-                <td class="mono" style="text-align:right;">${fmtBRL(r.mo)}</td>
-                <td class="mono" style="text-align:right;">${fmtBRL(r.mat)}</td>
-                <td class="mono" style="text-align:right;font-weight:700;">${fmtBRL(r.total)}</td>
-            </tr>`).join("") : `<tr><td colspan="4" style="text-align:center;color:var(--muted-2);padding:16px;">Sem dados</td></tr>`;
+                <td class="mono" style="text-align:right;">${fmtBRL(r.orcado)}</td>
+                <td class="mono" style="text-align:right;font-weight:700;">${fmtBRL(r.medido)}</td>
+            </tr>`).join("") : `<tr><td colspan="3" style="text-align:center;color:var(--muted-2);padding:16px;">Sem dados</td></tr>`;
         return `
         <div class="table-card">
             <div style="padding:16px 20px 0;font-size:11px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:8px;">
@@ -813,18 +818,16 @@ function renderAprovadoHqCusto(){
                     <thead>
                         <tr>
                             <th>${colLabel}</th>
-                            <th style="text-align:right;">Custo MO</th>
-                            <th style="text-align:right;">Custo Material</th>
-                            <th style="text-align:right;">Custo Total</th>
+                            <th style="text-align:right;">Valor Total Orçado</th>
+                            <th style="text-align:right;">Valor Total Medido</th>
                         </tr>
                     </thead>
                     <tbody style="filter:${loading?'blur(4px)':'none'}">${bodyRows}</tbody>
                     <tfoot>
                         <tr style="background:#f8fafc;font-weight:800;">
                             <td>Total</td>
-                            <td class="mono" style="text-align:right;">${fmtBRL(totalMO)}</td>
-                            <td class="mono" style="text-align:right;">${fmtBRL(totalMat)}</td>
-                            <td class="mono" style="text-align:right;">${fmtBRL(totalTotal)}</td>
+                            <td class="mono" style="text-align:right;">${fmtBRL(totalOrcado)}</td>
+                            <td class="mono" style="text-align:right;">${fmtBRL(totalMedido)}</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -836,10 +839,10 @@ function renderAprovadoHqCusto(){
         const map = new Map();
         list.forEach(d => {
             const label = (d[key] || "").toString().trim() || "Sem Info";
-            if(!map.has(label)) map.set(label, { orcado:0, mat:0, faturado:0 });
+            if(!map.has(label)) map.set(label, { orcado:0, medido:0, faturado:0 });
             const g = map.get(label);
-            g.orcado += parseCusto(d["custo mo"]);
-            g.mat += parseCusto(d["custo material"]);
+            g.orcado += parseCusto(d["valor total orcado"]);
+            g.medido += parseCusto(d["valor total medido"]);
             g.faturado += parseCusto(d["valor faturado total"]);
         });
         return [...map.entries()].map(([label, v]) => ({ label, ...v })).sort((a,b) => b.faturado - a.faturado);
@@ -847,13 +850,13 @@ function renderAprovadoHqCusto(){
 
     function tabelaHtmlResumo(titulo, rows, colLabel){
         const totalOrcado = rows.reduce((s,r)=>s+r.orcado,0);
-        const totalMat = rows.reduce((s,r)=>s+r.mat,0);
+        const totalMedido = rows.reduce((s,r)=>s+r.medido,0);
         const totalFaturado = rows.reduce((s,r)=>s+r.faturado,0);
         const bodyRows = rows.length ? rows.map(r => `
             <tr>
                 <td>${esc(r.label)}</td>
                 <td class="mono" style="text-align:right;">${fmtBRL(r.orcado)}</td>
-                <td class="mono" style="text-align:right;">${fmtBRL(r.mat)}</td>
+                <td class="mono" style="text-align:right;">${fmtBRL(r.medido)}</td>
                 <td class="mono" style="text-align:right;font-weight:700;">${fmtBRL(r.faturado)}</td>
             </tr>`).join("") : `<tr><td colspan="4" style="text-align:center;color:var(--muted-2);padding:16px;">Sem dados</td></tr>`;
         return `
@@ -868,7 +871,7 @@ function renderAprovadoHqCusto(){
                         <tr>
                             <th>${colLabel}</th>
                             <th style="text-align:right;">Valor Total Orçado</th>
-                            <th style="text-align:right;">Valor Total de Material</th>
+                            <th style="text-align:right;">Valor Total Medido</th>
                             <th style="text-align:right;">Valor Faturado Total</th>
                         </tr>
                     </thead>
@@ -877,7 +880,7 @@ function renderAprovadoHqCusto(){
                         <tr style="background:#f8fafc;font-weight:800;">
                             <td>Total</td>
                             <td class="mono" style="text-align:right;">${fmtBRL(totalOrcado)}</td>
-                            <td class="mono" style="text-align:right;">${fmtBRL(totalMat)}</td>
+                            <td class="mono" style="text-align:right;">${fmtBRL(totalMedido)}</td>
                             <td class="mono" style="text-align:right;">${fmtBRL(totalFaturado)}</td>
                         </tr>
                     </tfoot>
@@ -1217,9 +1220,10 @@ function renderGraficos(){
     Object.values(chartInstances).forEach(c => c && c.destroy());
     chartInstances = {};
 
-    chartInstances.statusCampo = renderDonut("chartStatusCampo", "legendStatusCampo", statusCampo, COLORS);
+    const statusCampoColors = statusCampo.map(d => getStatusCampoColor(d.name));
+    chartInstances.statusCampo = renderDonut("chartStatusCampo", "legendStatusCampo", statusCampo, statusCampoColors);
     chartInstances.statusDraft = renderDonut("chartStatusDraft", "legendStatusDraft", statusDraft, DRAFT_COLORS);
-    chartInstances.filaCampo = renderHBar("chartFilaCampo", statusCampo, COLORS);
+    chartInstances.filaCampo = renderHBar("chartFilaCampo", statusCampo, statusCampoColors);
     chartInstances.filaDraft = renderHBar("chartFilaDraft", statusDraft, DRAFT_COLORS);
     chartInstances.custoCluster = renderCustoStacked("chartCustoCluster", custoPorCluster);
     chartInstances.qtdCluster = renderHBar("chartQtdCluster", clusters, ["#6366f1"], true);
