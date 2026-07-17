@@ -658,6 +658,14 @@ const DRAFT_BADGE = {
 };
 const COLORS = ["#3b82f6","#6366f1","#8b5cf6","#ec4899","#f97316","#10b981","#0ea5e9","#f59e0b","#ef4444"];
 const DRAFT_COLORS = ["#10b981","#f59e0b","#ef4444","#6366f1","#3b82f6","#8b5cf6"];
+// Paleta semântica do gráfico Status Campo: verde = concluído, amarelo = em execução, vermelho = pendente
+const STATUS_CAMPO_COLOR_MAP = { CONCLUIDO:"#22c55e", APROVADO:"#22c55e", EXECUCAO:"#f5a623", PENDENTE:"#ef4444" };
+function getStatusCampoColor(label){
+    const n = norm(label);
+    if(n === "CONCLUIDO" || n === "APROVADO") return STATUS_CAMPO_COLOR_MAP.CONCLUIDO;
+    if(n.includes("EXECU")) return STATUS_CAMPO_COLOR_MAP.EXECUCAO;
+    return STATUS_CAMPO_COLOR_MAP.PENDENTE;
+}
 
 /* ==========================================================
    FETCH
@@ -901,12 +909,12 @@ function renderAprovadoHqCusto(){
         </div>`;
     }
 
-    const porClusterOriginal = agruparCustoOriginal(dadosAprovadoHQ, "cluster");
-    const porClusterResumo = agruparCustoResumo(dadosTodos, "cluster");
+    const porUfOriginal = agruparCustoOriginal(dadosAprovadoHQ, "uf");
+    const porUfResumo = agruparCustoResumo(dadosTodos, "uf");
 
     document.getElementById("aprovadoHqBar").innerHTML =
-        tabelaHtmlOriginal("Valor Medido", porClusterOriginal, "Cluster") +
-        tabelaHtmlResumo("Resumo", porClusterResumo, "Cluster");
+        tabelaHtmlOriginal("Valor Medido", porUfOriginal, "UF") +
+        tabelaHtmlResumo("Resumo", porUfResumo, "UF");
 }
 
 /* ==========================================================
@@ -1182,17 +1190,17 @@ function renderGraficos(){
 
     const statusCampo = agrupar(dados, "status campo");
     const statusDraft = agrupar(dados, "status draft");
-    const clusters = agrupar(dados, "cluster");
+    const ufs = agrupar(dados, "uf");
 
     const custoMap = {};
     dados.forEach(d=>{
-        const k = normDisplay(d.cluster);
+        const k = normDisplay(d.uf);
         if(!custoMap[k]) custoMap[k] = { mo:0, mat:0, total:0 };
         custoMap[k].mo += pickCusto(d, COST_FIELD_MAP["custo mo"]);
         custoMap[k].mat += pickCusto(d, COST_FIELD_MAP["custo material"]);
         custoMap[k].total += pickCusto(d, COST_FIELD_MAP["custo total"]);
     });
-    const custoPorCluster = Object.entries(custoMap).sort((a,b)=>b[1].total-a[1].total).map(([name,v])=>({name,...v}));
+    const custoPorUf = Object.entries(custoMap).sort((a,b)=>b[1].total-a[1].total).map(([name,v])=>({name,...v}));
 
     document.getElementById("tabGraficos").innerHTML = `
     <div class="charts-grid">
@@ -1219,11 +1227,11 @@ function renderGraficos(){
             <div class="chart-container"><canvas id="chartFilaDraft"></canvas></div>
         </div>
         <div class="chart-card">
-            <div class="chart-title">Custo Total por Cluster</div>
+            <div class="chart-title">Custo Total por UF</div>
             <div class="chart-container"><canvas id="chartCustoCluster"></canvas></div>
         </div>
         <div class="chart-card">
-            <div class="chart-title">Quantidade por Cluster</div>
+            <div class="chart-title">Quantidade por UF</div>
             <div class="chart-container"><canvas id="chartQtdCluster"></canvas></div>
         </div>
     </div>
@@ -1232,12 +1240,13 @@ function renderGraficos(){
     Object.values(chartInstances).forEach(c => c && c.destroy());
     chartInstances = {};
 
-    chartInstances.statusCampo = renderDonut("chartStatusCampo", "legendStatusCampo", statusCampo, COLORS);
+    const statusCampoColors = statusCampo.map(d => getStatusCampoColor(d.name));
+    chartInstances.statusCampo = renderDonut("chartStatusCampo", "legendStatusCampo", statusCampo, statusCampoColors);
     chartInstances.statusDraft = renderDonut("chartStatusDraft", "legendStatusDraft", statusDraft, DRAFT_COLORS);
-    chartInstances.filaCampo = renderHBar("chartFilaCampo", statusCampo, COLORS);
+    chartInstances.filaCampo = renderHBar("chartFilaCampo", statusCampo, statusCampoColors);
     chartInstances.filaDraft = renderHBar("chartFilaDraft", statusDraft, DRAFT_COLORS);
-    chartInstances.custoCluster = renderCustoStacked("chartCustoCluster", custoPorCluster);
-    chartInstances.qtdCluster = renderHBar("chartQtdCluster", clusters, ["#6366f1"], true);
+    chartInstances.custoCluster = renderCustoStacked("chartCustoCluster", custoPorUf);
+    chartInstances.qtdCluster = renderHBar("chartQtdCluster", ufs, ["#6366f1"], true);
 }
 
 function renderDonut(canvasId, legendId, data, colors){
