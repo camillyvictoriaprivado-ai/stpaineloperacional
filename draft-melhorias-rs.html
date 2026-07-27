@@ -637,7 +637,7 @@ function esc(v){
 function getCampoStatus(s){
     const n = norm(s);
     if (n === "CONCLUIDO" || n === "APROVADO") return "concluido";
-    if (n.includes("EXECU")) return "execucao";
+    if (n.includes("EXECU") || n.includes("ANDAMENTO")) return "execucao";
     return "pendente";
 }
 function getDraftStatus(s){
@@ -648,7 +648,7 @@ function getDraftStatus(s){
 }
 const CAMPO_BADGE = {
     concluido: { cls: "badge-green", label: "Concluído" },
-    execucao: { cls: "badge-amber", label: "Em Execução" },
+    execucao: { cls: "badge-amber", label: "Em Execução", sublabel: "ANDAMENTO", sublabel: "Em Andamento" },
     pendente: { cls: "badge-red", label: "Pendente" },
 };
 const DRAFT_BADGE = {
@@ -659,11 +659,11 @@ const DRAFT_BADGE = {
 const COLORS = ["#3b82f6","#6366f1","#8b5cf6","#ec4899","#f97316","#10b981","#0ea5e9","#f59e0b","#ef4444"];
 const DRAFT_COLORS = ["#10b981","#f59e0b","#ef4444","#6366f1","#3b82f6","#8b5cf6"];
 // Paleta semântica do gráfico Status Campo: verde = concluído, amarelo = em execução, vermelho = pendente
-const STATUS_CAMPO_COLOR_MAP = { CONCLUIDO:"#22c55e", APROVADO:"#22c55e", EXECUCAO:"#f5a623", PENDENTE:"#ef4444" };
+const STATUS_CAMPO_COLOR_MAP = { CONCLUIDO:"#22c55e", APROVADO:"#22c55e", EXECUCAO:"#f5a623", PENDENTE:"#ef4444", ANDAMENTO:"#f5a623", Em_Andamento:"#f5a623" };
 function getStatusCampoColor(label){
     const n = norm(label);
     if(n === "CONCLUIDO" || n === "APROVADO") return STATUS_CAMPO_COLOR_MAP.CONCLUIDO;
-    if(n.includes("EXECU")) return STATUS_CAMPO_COLOR_MAP.EXECUCAO;
+    if(n.includes("EXECU") || n.includes("ANDAMENTO")) return STATUS_CAMPO_COLOR_MAP.EXECUCAO;
     return STATUS_CAMPO_COLOR_MAP.PENDENTE;
 }
 
@@ -727,7 +727,7 @@ function renderKPIBar(){
         const sc = norm(d["status campo"]);
         const sd = norm(d["status draft"]);
         if(sc==="CONCLUIDO"||sc==="APROVADO") campoConcluido++;
-        else if(sc.includes("EXECU")) campoExecucao++;
+        else if(sc.includes("EXECU") || sc.includes("ANDAMENTO")) campoExecucao++;
         else campoPendente++;
 
         if(sd==="APROVADO") draftAprovado++;
@@ -1787,7 +1787,7 @@ const ADD_FIELDS = [
     { key:"previsao", label:"Previsão", type:"date", group:"Datas" },
     { key:"data envio medicao", label:"Data Envio Medição", type:"date", group:"Datas" },
 
-    { key:"status campo", label:"Status Campo", type:"select", options:["PENDENTE DE EXECUÇÃO","EM EXECUÇÃO","CONCLUIDO"], group:"Status" },
+    { key:"status campo", label:"Status Campo", type:"select", options:["PENDENTE DE EXECUÇÃO","EM EXECUÇÃO","CONCLUIDO","ANDAMENTO", "Em Andamento"], group:"Status" },
     { key:"status draft", label:"Status Draft", type:"text", placeholder:"ex: Aguardando Avaliação HQ - Cadastro", group:"Status" },
     { key:"status medicao", label:"Status Medição", type:"text", placeholder:"ex: Sem medição", group:"Status" },
 
