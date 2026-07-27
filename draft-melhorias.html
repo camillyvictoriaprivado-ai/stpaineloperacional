@@ -742,9 +742,9 @@ function renderKPIBar(){
         { label:"Total Melhorias", value:total, accent:"#6366f1" },
         { label:"Campo Concluído", value:campoConcluido, sub:`${total?Math.round(campoConcluido/total*100):0}% do total`, accent:"#10b981" },
         { label:"Em Execução", value:campoExecucao, accent:"#f59e0b" },
-        { label:"Valor MO", value:fmtBRL(custoMO), accent:"#8b5cf6" },
-        { label:"Valor Material", value:fmtBRL(custoMat), accent:"#0ea5e9" },
-        { label:"Valor Total", value:fmtBRL(custoTotal), accent:"#0f172a" },
+        { label:"Custo MO", value:fmtBRL(custoMO), accent:"#8b5cf6" },
+        { label:"Custo Material", value:fmtBRL(custoMat), accent:"#0ea5e9" },
+        { label:"Custo Total", value:fmtBRL(custoTotal), accent:"#0f172a" },
     ];
 
     document.getElementById("kpiBar").innerHTML = cards.map(c => `
