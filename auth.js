@@ -13,7 +13,14 @@
 // (isso evita "piscar" o conteúdo antes de confirmar o acesso)
 // =========================================================
 
-const AUTH_API_URL = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec";
+// Mesmo endpoint usado no login (index.html), cadastro e demais páginas.
+// Evita depender de um segundo deployment do Apps Script que pode ficar
+// desatualizado em relação ao Code.gs principal.
+const AUTH_API_URL = "https://script.google.com/macros/s/AKfycbwPe5hUMTqNdlbLAj3DhkgBeYlhwqb4p8AWfoRcO7XCoPXvUEbrzUQVVky2AZfqHPZr/exec";
+
+// Tempo máximo de espera pela validação antes de desistir e voltar pro login.
+// Isso garante que a página NUNCA fique travada em branco pra sempre.
+const AUTH_TIMEOUT_MS = 8000;
 
 async function protegerPagina(niveisPermitidos) {
 
@@ -24,8 +31,16 @@ async function protegerPagina(niveisPermitidos) {
         return;
     }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), AUTH_TIMEOUT_MS);
+
     try {
-        const res = await fetch(`${AUTH_API_URL}?type=validate&token=${encodeURIComponent(token)}`);
+        const res = await fetch(
+            `${AUTH_API_URL}?type=validate&token=${encodeURIComponent(token)}`,
+            { signal: controller.signal }
+        );
+        clearTimeout(timeoutId);
+
         const data = await res.json();
 
         if (!data.valid) {
@@ -56,7 +71,10 @@ async function protegerPagina(niveisPermitidos) {
         }
 
     } catch (err) {
+        clearTimeout(timeoutId);
         console.error("Não foi possível validar o acesso:", err);
+        // Falha de rede, timeout, ou resposta inválida: nunca deixa a
+        // página travada em branco — volta pro login.
         window.location.href = "index.html";
     }
 }
