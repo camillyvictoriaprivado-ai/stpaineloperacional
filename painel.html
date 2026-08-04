@@ -522,38 +522,6 @@ body.auth-ready{
 
 </head>
 
-<script>
-async function checkLogin() {
-
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-        window.location.href = "index.html";
-        return;
-    }
-
-    const url = "https://script.google.com/macros/s/AKfycby-4fOy9HAEmCUMndlLrPWJC7Gq62K5kSd3VWlo3EHEcug_68A5Uyv8hzzbJHtxh0t-Ig/exec?type=validate&token=" + token;
-
-    try {
-        const res = await fetch(url);
-        const data = await res.json();
-
-        if (!data.valid) {
-            window.location.href = "index.html";
-            return;
-        }
-
-        document.body.classList.add("auth-ready");
-
-    } catch (err) {
-        console.error("Não foi possível validar o login:", err);
-        window.location.href = "index.html";
-    }
-}
-
-checkLogin();
-</script>
-
 <body>
 
 <div class="header">
