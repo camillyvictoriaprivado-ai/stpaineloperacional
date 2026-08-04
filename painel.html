@@ -522,6 +522,58 @@ body.auth-ready{
 
 </head>
 
+<script>
+(function protegerPainel(){
+
+    const API_URL = "https://script.google.com/macros/s/AKfycbwPe5hUMTqNdlbLAj3DhkgBeYlhwqb4p8AWfoRcO7XCoPXvUEbrzUQVVky2AZfqHPZr/exec";
+    const NIVEIS_PERMITIDOS = ["admin_sc", "admin_rs", "usuario_sc", "usuario_rs"];
+
+    const token = localStorage.getItem("token");
+
+    if(!token){
+        window.location.href = "index.html";
+        return;
+    }
+
+    // Timeout de segurança: se a validação travar (rede lenta, endpoint fora do ar
+    // etc), a página não fica em branco para sempre — ela volta pro login.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+    fetch(`${API_URL}?type=validate&token=${encodeURIComponent(token)}`, { signal: controller.signal })
+        .then(res => res.json())
+        .then(data => {
+            clearTimeout(timeoutId);
+
+            if(!data.valid){
+                localStorage.removeItem("token");
+                localStorage.removeItem("nivel");
+                window.location.href = "index.html";
+                return;
+            }
+
+            const nivel = String(data.nivel || "").trim().toLowerCase().replace(/\s+/g, "_");
+            localStorage.setItem("nivel", nivel);
+
+            if(!NIVEIS_PERMITIDOS.includes(nivel)){
+                window.location.href = "index.html";
+                return;
+            }
+
+            document.addEventListener("DOMContentLoaded", () => document.body.classList.add("auth-ready"));
+            if(document.readyState !== "loading"){
+                document.body.classList.add("auth-ready");
+            }
+        })
+        .catch(err => {
+            clearTimeout(timeoutId);
+            console.error("Não foi possível validar o acesso:", err);
+            window.location.href = "index.html";
+        });
+
+})();
+</script>
+
 <body>
 
 <div class="header">
