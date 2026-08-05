@@ -620,6 +620,7 @@ const COST_FIELD_MAP = {
     "custo mo": ["valor mo", "custo mo"],
     "custo material": ["valor material", "custo material"],
     "custo total": ["valor total orcado", "custo total"],
+    "valor faturado": ["valor faturado", "faturado", "valor_faturado", "custo faturado"] // <-- ADICIONADO
 };
 function displayCusto(d, keys){
     const v = pickCusto(d, keys);
@@ -722,6 +723,7 @@ function renderKPIBar(){
     let campoConcluido=0, campoExecucao=0, campoPendente=0;
     let draftAprovado=0, draftPendente=0;
     let custoMO=0, custoMat=0, custoTotal=0;
+    let valorFaturado=0;
 
     dados.forEach(d=>{
         const sc = norm(d["status campo"]);
@@ -736,6 +738,7 @@ function renderKPIBar(){
         custoMO += pickCusto(d, ["valor mo", "custo mo"]);
         custoMat += pickCusto(d, ["valor material", "custo material"]);
         custoTotal += pickCusto(d, ["valor total orcado", "custo total"]);
+        valorFaturado += pickCusto(d, ["valor faturado", "faturado", "valor_faturado", "custo faturado"]);
     });
 
     const cards = [
@@ -745,6 +748,7 @@ function renderKPIBar(){
         { label:"Custo MO", value:fmtBRL(custoMO), accent:"#8b5cf6" },
         { label:"Custo Material", value:fmtBRL(custoMat), accent:"#0ea5e9" },
         { label:"Custo Total", value:fmtBRL(custoTotal), accent:"#0f172a" },
+        { label:"Valor Faturado Total", value:fmtBRL(valorFaturado), accent:"#10b981" },
     ];
 
     document.getElementById("kpiBar").innerHTML = cards.map(c => `
@@ -856,17 +860,17 @@ function renderAprovadoHqCusto(){
     }
 
     function agruparCustoResumo(list, key){
-        const map = new Map();
-        list.forEach(d => {
-            const label = (d[key] || "").toString().trim() || "Sem Info";
-            if(!map.has(label)) map.set(label, { orcado:0, medido:0, faturado:0 });
-            const g = map.get(label);
-            g.orcado += parseCusto(d["valor total orcado"]);
-            g.medido += parseCusto(d["valor total medido"]);
-            g.faturado += parseCusto(d["valor faturado"]);
-        });
-        return [...map.entries()].map(([label, v]) => ({ label, ...v })).sort((a,b) => b.faturado - a.faturado);
-    }
+    const map = new Map();
+    list.forEach(d => {
+        const label = (d[key] || "").toString().trim() || "Sem Info";
+        if(!map.has(label)) map.set(label, { orcado:0, medido:0, faturado:0 });
+        const g = map.get(label);
+        g.orcado += parseCusto(d["valor total orcado"]);
+        g.medido += parseCusto(d["valor total medido"]);
+        g.faturado += pickCusto(d, COST_FIELD_MAP["valor faturado"]); // <-- ALTERADO AQUI
+    });
+    return [...map.entries()].map(([label, v]) => ({ label, ...v })).sort((a,b) => b.faturado - a.faturado);
+}
 
     function tabelaHtmlResumo(titulo, rows, colLabel){
         const totalOrcado = rows.reduce((s,r)=>s+r.orcado,0);
