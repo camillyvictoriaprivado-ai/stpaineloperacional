@@ -689,7 +689,7 @@ async function carregar(){
     renderHeaderStatus();
     document.getElementById("refreshIcon").classList.add("spin");
     try{
-        const res = await fetch(API_URL + "&cache=" + Date.now());
+        const res = await fetch(API_URL + "?type=melhorias-rs&cache=" + Date.now());
         const json = await res.json();
         dadosGlobais = (json["melhorias-rs"] || []).map(normalizeMelhoria);
         lastUpdate = new Date();
