@@ -176,6 +176,28 @@ body.auth-ready{
 .status-breakdown-title::before{
     content:""; width:3px; height:12px; border-radius:2px; background:var(--accent,#6366f1); display:inline-block;
 }
+.status-breakdown-filter{
+    margin-left:auto; font-size:11px; font-weight:600; color:var(--navy); text-transform:none;
+    letter-spacing:normal; border:1px solid var(--border); border-radius:8px; padding:3px 10px;
+    background:white; cursor:pointer; max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.equipe-dropdown-wrap{ position:relative; margin-left:auto; }
+.equipe-dropdown-menu{
+    display:none; position:absolute; top:calc(100% + 4px); right:0; z-index:20;
+    background:white; border:1px solid var(--border); border-radius:10px;
+    box-shadow:0 8px 24px rgba(15,23,42,.12); min-width:200px; max-height:240px; overflow-y:auto; padding:4px 0;
+}
+.equipe-dropdown-item{
+    display:flex; align-items:center; gap:8px; padding:6px 12px; font-size:12px; font-weight:600;
+    color:#374151; text-transform:none; letter-spacing:normal; cursor:pointer; white-space:nowrap;
+}
+.equipe-dropdown-item:hover{ background:var(--border-light); }
+.equipe-dropdown-item input{ cursor:pointer; }
+.equipe-dropdown-clear{
+    padding:6px 12px; font-size:11px; font-weight:700; color:#6366f1; text-transform:none;
+    letter-spacing:normal; cursor:pointer; border-bottom:1px solid var(--border); margin-bottom:2px;
+}
+.equipe-dropdown-clear:hover{ background:var(--border-light); }
 .status-count-row{ display:flex; align-items:flex-start; gap:10px; padding:5px 0; }
 .status-count-label{
     flex:0 0 40%; font-size:12px; color:#374151; font-weight:600;
@@ -184,7 +206,8 @@ body.auth-ready{
 }
 .status-count-track{ flex:1; height:6px; border-radius:3px; background:var(--border-light); overflow:hidden; margin-top:6px; align-self:flex-start; }
 .status-count-fill{ height:100%; border-radius:3px; }
-.status-count-val{ flex:0 0 28px; text-align:right; font-size:12px; font-weight:800; color:var(--navy); font-family:monospace; padding-top:1px; }
+.status-count-val{ flex:0 0 auto; text-align:right; font-size:12px; font-weight:800; color:var(--navy); font-family:monospace; padding-top:1px; min-width:28px; }
+.status-count-mo{ flex:0 0 auto; text-align:right; font-size:11px; font-weight:700; color:var(--muted-2); font-family:monospace; padding-top:1px; min-width:64px; }
 
 /* TABS */
 .tabs{ display:flex; gap:4px; margin:24px 0 20px; border-bottom:1px solid var(--border); }
@@ -583,6 +606,7 @@ let dadosGlobais = [];
 let loading = true;
 let hasError = false;
 let lastUpdate = null;
+let statusCampoEquipeFiltro = []; // array de equipes selecionadas (vazio = todas)
 let activeTab = "fila";
 
 /* Estado - Fila de Aprovação */
@@ -760,37 +784,109 @@ function renderKPIBar(){
    RENDER: CONTABILIZAÇÃO POR STATUS (Campo / Draft / Medição)
    ========================================================== */
 const STATUS_BREAKDOWN_FIELDS = [
-    { key:"status campo", title:"Status Campo", accent:"#ef4444" },
+    { key:"status campo", title:"Status Campo", accent:"#ef4444", showMo:true },
     { key:"status draft", title:"Status Draft", accent:"#3b82f6" },
     { key:"status medicao", title:"Status Medição", accent:"#f97316" },
 ];
 
+function getEquipeOptions(){
+    return [...new Set(dadosGlobais.map(d => (d["equipe"] || "").toString().trim()).filter(Boolean))].sort();
+}
+
+function toggleEquipeDropdown(ev){
+    ev.stopPropagation();
+    const dd = document.getElementById("equipeDropdownMenu");
+    const isOpen = dd.style.display === "block";
+    dd.style.display = isOpen ? "none" : "block";
+}
+document.addEventListener("click", (e) => {
+    const dd = document.getElementById("equipeDropdownMenu");
+    const btn = document.getElementById("equipeDropdownBtn");
+    if(dd && dd.style.display === "block" && !dd.contains(e.target) && e.target !== btn){
+        dd.style.display = "none";
+    }
+});
+
+function onStatusCampoEquipeToggle(cb, equipe){
+    if(cb.checked){
+        if(!statusCampoEquipeFiltro.includes(equipe)) statusCampoEquipeFiltro.push(equipe);
+    }else{
+        statusCampoEquipeFiltro = statusCampoEquipeFiltro.filter(e => e !== equipe);
+    }
+    renderStatusBreakdown();
+    // Reabre o dropdown após re-render, para o usuário poder marcar mais de uma opção seguida
+    const dd = document.getElementById("equipeDropdownMenu");
+    if(dd) dd.style.display = "block";
+}
+
+function limparFiltroEquipe(ev){
+    ev.stopPropagation();
+    statusCampoEquipeFiltro = [];
+    renderStatusBreakdown();
+    const dd = document.getElementById("equipeDropdownMenu");
+    if(dd) dd.style.display = "block";
+}
+
 function renderStatusBreakdown(){
-    const dados = dadosGlobais;
-    const total = dados.length;
+    const total = dadosGlobais.length;
 
     const html = STATUS_BREAKDOWN_FIELDS.map(f => {
+        // Filtro por equipe (multi) aplicado somente ao card Status Campo
+        const temFiltro = f.showMo && statusCampoEquipeFiltro.length > 0;
+        const dados = temFiltro
+            ? dadosGlobais.filter(d => statusCampoEquipeFiltro.includes((d["equipe"] || "").toString().trim()))
+            : dadosGlobais;
+        const baseTotal = temFiltro ? dados.length : total;
+
         const counts = new Map();
+        const moPorLabel = new Map();
         dados.forEach(d => {
             const raw = (d[f.key] || "").toString().trim();
             const label = raw || "Sem Status";
             counts.set(label, (counts.get(label) || 0) + 1);
+            if(f.showMo){
+                const mo = pickCusto(d, COST_FIELD_MAP["custo mo"]);
+                moPorLabel.set(label, (moPorLabel.get(label) || 0) + mo);
+            }
         });
         const rows = [...counts.entries()].sort((a,b) => b[1]-a[1]);
 
         const rowsHtml = rows.map(([label, count]) => {
-            const pct = total ? Math.round(count/total*100) : 0;
+            const pct = baseTotal ? Math.round(count/baseTotal*100) : 0;
+            const moHtml = f.showMo
+                ? `<div class="status-count-mo" title="Soma Valor MO">${fmtBRL(moPorLabel.get(label) || 0)}</div>`
+                : "";
             return `
             <div class="status-count-row">
                 <div class="status-count-label" title="${esc(label)}">${esc(label)}</div>
                 <div class="status-count-track"><div class="status-count-fill" style="width:${pct}%;background:${f.accent};"></div></div>
                 <div class="status-count-val">${count}</div>
+                ${moHtml}
             </div>`;
         }).join("");
 
+        let filtroHtml = "";
+        if(f.showMo){
+            const opts = getEquipeOptions();
+            const qtdSel = statusCampoEquipeFiltro.length;
+            const btnLabel = qtdSel === 0 ? "Todas as equipes" : `${qtdSel} equipe${qtdSel>1?"s":""} selecionada${qtdSel>1?"s":""}`;
+            filtroHtml = `
+            <div class="equipe-dropdown-wrap">
+                <button type="button" id="equipeDropdownBtn" class="status-breakdown-filter" onclick="toggleEquipeDropdown(event)">${esc(btnLabel)} ▾</button>
+                <div id="equipeDropdownMenu" class="equipe-dropdown-menu">
+                    <div class="equipe-dropdown-clear" onclick="limparFiltroEquipe(event)">Limpar seleção</div>
+                    ${opts.map(eq => `
+                        <label class="equipe-dropdown-item">
+                            <input type="checkbox" value="${esc(eq)}" ${statusCampoEquipeFiltro.includes(eq)?"checked":""} onchange="onStatusCampoEquipeToggle(this,'${esc(eq).replace(/'/g,"\\'")}')">
+                            <span>${esc(eq)}</span>
+                        </label>`).join("") || '<div style="padding:8px 12px;font-size:12px;color:var(--muted-2);">Sem equipes</div>'}
+                </div>
+            </div>`;
+        }
+
         return `
         <div class="status-breakdown-card" style="--accent:${f.accent}">
-            <div class="status-breakdown-title">${f.title}</div>
+            <div class="status-breakdown-title">${f.title}${filtroHtml}</div>
             ${rowsHtml || '<div style="font-size:12px;color:var(--muted-2);padding:8px 0;">Sem dados</div>'}
         </div>`;
     }).join("");
